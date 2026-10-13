@@ -106,7 +106,7 @@ export interface FileEntry {
   relDirs: string[];
 }
 
-export type MatchSource = "drop" | "prefix" | "fuzzy" | "manual";
+export type MatchSource = "drop" | "prefix" | "learned" | "fuzzy" | "manual";
 
 export interface Match {
   id: string;

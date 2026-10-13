@@ -43,3 +43,19 @@ export async function saveSettings(settings: Settings): Promise<void> {
   await s.set("settings", settings);
   await s.save();
 }
+
+/** Vendor codes ("STF") confirmed by renames, mapped to project ids. Kept per API environment. */
+export type Aliases = Record<string, string>;
+
+const aliasKey = (settings: Settings) => `aliases:${baseUrl(settings)}`;
+
+export async function loadAliases(settings: Settings): Promise<Aliases> {
+  const s = await getStore();
+  return (await s.get<Aliases>(aliasKey(settings))) ?? {};
+}
+
+export async function saveAliases(settings: Settings, aliases: Aliases): Promise<void> {
+  const s = await getStore();
+  await s.set(aliasKey(settings), aliases);
+  await s.save();
+}

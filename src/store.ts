@@ -1,14 +1,15 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import { FALLBACK_CATALOG, fetchAssets, fetchProjects, fetchWorkRequests, loadCatalog } from "./lib/api";
-import { loadSettings, saveSettings, type Settings, DEFAULT_SETTINGS } from "./lib/settings";
+import { FALLBACK_CATALOG, apiGet, fetchAssets, fetchProjects, fetchWorkRequests, loadCatalog } from "./lib/api";
+import { loadAliases, loadSettings, saveAliases, saveSettings, type Aliases, type Settings, DEFAULT_SETTINGS } from "./lib/settings";
 import { mediaTypeOf, durationOf } from "./lib/media";
 import { parseFilename } from "./lib/parse";
-import { dirsOf, rankAssets, rankProjects } from "./lib/fuzzy";
+import { dirsOf, rankAssets } from "./lib/fuzzy";
+import { vendorCode } from "./lib/abbrev";
+import { assetEvidence, chooseProject, nameScores, searchQueries } from "./lib/projectMatch";
 import type { Asset, Catalog, FileEntry, Overrides, Probe, Project, QueueItem, WorkRequest } from "./lib/types";
 
-/** Below these scores a fuzzy guess is left for the user to make. */
-const PROJECT_THRESHOLD = 0.6;
+/** Below this score a fuzzy asset guess is left for the user to make. */
 const ASSET_THRESHOLD = 0.45;
 const PROBE_CONCURRENCY = 4;
 
@@ -41,6 +42,8 @@ interface State {
   items: QueueItem[];
   lastResults?: RenameResult[];
   canUndo: boolean;
+  /** Vendor codes learned from confirmed renames, e.g. { STF: "<street fighter id>" }. */
+  aliases: Aliases;
 
   init(): Promise<void>;
   openSettings(open: boolean): void;
@@ -59,30 +62,64 @@ interface State {
   removeItems(ids: string[]): void;
   applyRenames(ops: { id: string; from: string; to: string }[]): Promise<RenameResult[]>;
   undo(): Promise<RenameResult[]>;
+  forgetAliases(): Promise<void>;
 }
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export const useStore = create<State>((set, get) => {
   const pending = new Map<string, Promise<any>>();
+  /** Cross-project asset searches by query, shared by every file in a drop. */
+  const assetSearches = new Map<string, Promise<Asset[]>>();
+
+  const searchAssets = (query: string) => {
+    const key = query.toLowerCase();
+    if (!assetSearches.has(key)) {
+      assetSearches.set(key, apiGet<Asset[]>(get().settings, "assets", { q: query, limit: 200 }).catch(() => []));
+    }
+    return assetSearches.get(key)!;
+  };
+
+  /** Guess the project for a file nobody assigned one to. */
+  async function guessProject(item: QueueItem, facts: ReturnType<typeof factsOf>, projects: Project[]) {
+    const parsed = parseFilename(item.file.name, get().catalog, projects);
+    if (parsed.projectId) return { id: parsed.projectId, source: "prefix" as const, score: 1 };
+
+    const code = vendorCode(item.file.name);
+    const learned = code ? get().aliases[code] : undefined;
+    if (learned && projects.some((p) => p._id === learned)) return { id: learned, source: "learned" as const, score: 1 };
+
+    const names = nameScores(facts, projects);
+    if (Math.max(0, ...names.values()) < 1) {
+      const found = (await Promise.all(searchQueries(item.file.name, get().catalog).map(searchAssets))).flat();
+      const unique = [...new Map(found.map((a) => [a._id, a])).values()];
+      const evidence = assetEvidence(facts, unique, get().catalog);
+      const best = chooseProject(names, evidence);
+      return best ? { id: best.item, source: "fuzzy" as const, score: best.score } : undefined;
+    }
+    const best = chooseProject(names, new Map());
+    return best ? { id: best.item, source: "fuzzy" as const, score: best.score } : undefined;
+  }
+
+  const factsOf = (item: QueueItem) => ({
+    name: item.file.name,
+    dirs: dirsOf(item.file),
+    duration: durationOf(item.probe),
+    mediaType: item.mediaType,
+  });
 
   /** Fill in project/asset guesses for one item from its name, folders and probe. */
   async function match(id: string) {
     const item = get().items.find((i) => i.id === id);
     const projects = get().projects;
     if (!item || projects.status !== "ready") return;
-    const facts = { name: item.file.name, dirs: dirsOf(item.file), duration: durationOf(item.probe), mediaType: item.mediaType };
+    const facts = factsOf(item);
 
-    let project = item.project;
-    if (!project) {
-      const parsed = parseFilename(item.file.name, get().catalog, projects.data);
-      if (parsed.projectId) project = { id: parsed.projectId, source: "prefix", score: 1 };
-      else {
-        const best = rankProjects(facts, projects.data)[0];
-        if (best && best.score >= PROJECT_THRESHOLD) project = { id: best.item._id, source: "fuzzy", score: best.score };
-      }
-    }
+    const project = item.project ?? (await guessProject(item, facts, projects.data));
     if (!project) return;
+    // The user may have picked a project while we were searching.
+    const current = get().items.find((i) => i.id === id);
+    if (current?.project && current.project.source !== "fuzzy" && current.project.id !== project.id) return;
 
     let asset = item.asset;
     if (!asset || asset.source === "fuzzy") {
@@ -133,10 +170,12 @@ export const useStore = create<State>((set, get) => {
     view: "browse",
     items: [],
     canUndo: false,
+    aliases: {},
 
     async init() {
       const settings = await loadSettings();
       set({ settings, settingsLoaded: true, settingsOpen: !settings.token });
+      loadAliases(settings).then((aliases) => set({ aliases })).catch(() => {});
       invoke<boolean>("has_undo").then((canUndo) => set({ canUndo }));
       await get().refresh();
     },
@@ -147,7 +186,8 @@ export const useStore = create<State>((set, get) => {
 
     async updateSettings(settings) {
       await saveSettings(settings);
-      set({ settings, settingsOpen: false, assets: {}, workRequests: {} });
+      assetSearches.clear();
+      set({ settings, settingsOpen: false, assets: {}, workRequests: {}, aliases: await loadAliases(settings).catch(() => ({})) });
       await get().refresh();
     },
 
@@ -305,6 +345,24 @@ export const useStore = create<State>((set, get) => {
         ops: ops.map(({ from, to }) => ({ from, to })),
       });
       const byFrom = new Map(results.map((r) => [r.from, r]));
+
+      // A rename confirms the file's project: remember its vendor code for next time.
+      const projectList = get().projects.status === "ready" ? (get().projects as { data: Project[] }).data : [];
+      const aliases = { ...get().aliases };
+      let learned = false;
+      for (const item of get().items) {
+        const code = vendorCode(item.file.name);
+        const project = projectList.find((p) => p._id === item.project?.id);
+        if (!code || !project || !byFrom.get(item.file.path)?.ok) continue;
+        if (code === project.filePrefix?.toUpperCase() || aliases[code] === project._id) continue;
+        aliases[code] = project._id;
+        learned = true;
+      }
+      if (learned) {
+        set({ aliases });
+        saveAliases(get().settings, aliases).catch(() => {});
+      }
+
       set((s) => ({
         lastResults: results,
         canUndo: results.some((r) => r.ok) || s.canUndo,
@@ -316,6 +374,11 @@ export const useStore = create<State>((set, get) => {
         }),
       }));
       return results;
+    },
+
+    async forgetAliases() {
+      set({ aliases: {} });
+      await saveAliases(get().settings, {});
     },
 
     async undo() {

@@ -13,6 +13,12 @@ export function SettingsDialog() {
   const [test, setTest] = useState<{ ok: boolean; text: string } | null>(null);
   const [testing, setTesting] = useState(false);
   const updater = useUpdater();
+  const aliases = useStore((s) => s.aliases);
+  const forgetAliases = useStore((s) => s.forgetAliases);
+  const projects = useStore((s) => s.projects);
+  const projectName = (id: string) =>
+    projects.status === "ready" ? projects.data.find((p) => p._id === id)?.name ?? "unknown project" : id;
+  const remembered = Object.entries(aliases).sort(([a], [b]) => a.localeCompare(b));
 
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -84,6 +90,19 @@ export function SettingsDialog() {
             <input className="field mono" value={draft.mediainfoPath} placeholder={tools.mediainfo ?? "Not found — ffprobe output is mapped instead"} onChange={(e) => set("mediainfoPath", e.target.value)} />
           </label>
           {test && <div className={`status-line ${test.ok ? "good" : "bad"}`}>{test.text}</div>}
+          {remembered.length > 0 && (
+            <div className="update-row">
+              <span className="muted" style={{ flex: 1 }}>
+                Remembered vendor codes:{" "}
+                {remembered.map(([code, id]) => (
+                  <span key={code} className="mono" title={projectName(id)}>
+                    {code} → {projectName(id)}{"  "}
+                  </span>
+                ))}
+              </span>
+              <button type="button" className="btn small" onClick={forgetAliases}>Forget</button>
+            </div>
+          )}
           <div className="update-row">
             <span className="muted">Pixname {updater.version ?? ""}</span>
             <button type="button" className="btn small" disabled={updater.checking} onClick={() => updater.check(true)}>

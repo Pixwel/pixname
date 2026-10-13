@@ -2,7 +2,7 @@
 // Everything here produces *suggestions* with a confidence score; the strict parser always wins.
 import { Ingest } from "@pixwel/pixwel-sdk";
 import type { Asset, AssetType, Catalog, Language, Project } from "./types";
-import { findTag, languageExists, typeToken } from "./parse";
+import { findTag, languageExists, parameterize, typeToken } from "./parse";
 
 /**
  * Folder context for a file, nearest first. Inside a dropped folder that's the relative path;
@@ -12,6 +12,12 @@ export function dirsOf(file: { dir: string; relDirs?: string[] }): string[] {
   if (file.relDirs?.length) return [...file.relDirs].reverse();
   const parent = file.dir.split(/[\\/]/).filter(Boolean).pop();
   return parent ? [parent] : [];
+}
+
+/** Lowercased leading vendor code ("STF_…" -> "stf"); see abbrev.ts vendorCode. */
+function vendorCodeOf(fileName: string): string | undefined {
+  const first = fileName.split(/[_\s.]/)[0] ?? "";
+  return first.length >= 2 && first.length <= 6 && /^[A-Z0-9]+$/.test(first) ? first.toLowerCase() : undefined;
 }
 
 /** Lowercase word tokens, splitting on separators and letter/digit boundaries. */
@@ -69,6 +75,8 @@ const NOISE = new Set([
   "5994", "59", "94", "x", "final", "master", "approved", "v", "ver", "version",
   "rev", "txtd", "txtl", "txtls", "txtless", "textless", "texted", "txted", "clean", "stereo", "mono", "51", "lr", "lt", "rt", "mix",
   "sec", "secs", "s", "min", "the", "a", "an", "of", "and", "for", "copy", "new", "export", "render", "output",
+  // Delivery/format words: "ProRes422HQ", "Split Audio", "Splits_Narr_Dx_Mx_Fx", "NoGFX".
+  "intl", "pro", "res", "422", "4444", "audio", "split", "splits", "narr", "dx", "mx", "fx", "sfx", "gfx", "nogfx", "withgfx",
 ]);
 
 export interface LooseHints {
@@ -264,12 +272,15 @@ export function rankAssets(
   project?: Project,
 ): Scored<Asset>[] {
   const parts = stripExt(facts.name).split("_").map((p) => p.toUpperCase());
+  const sections = stripExt(facts.name).split("_").map(parameterize);
   const projectWords = new Set(project ? [...tokenize(project.filePrefix ?? ""), ...tokenize(project.name)] : []);
   const hints = contextHints(facts.name, facts.dirs, catalog);
   const hintedTypes = new Set(hints.types);
   // Every type word is "context", not asset identity: "Social/Explainer 30" should match on "explainer 30".
   const typeWords = new Set(types.flatMap((t) => tokenize(typeToken(t))).map(singular));
-  const clean = (tokens: string[]) => tokens.filter((t) => !projectWords.has(t) && !typeWords.has(singular(t)));
+  const code = vendorCodeOf(facts.name);
+  const clean = (tokens: string[]) =>
+    tokens.filter((t) => !projectWords.has(t) && !typeWords.has(singular(t)) && t !== code);
 
   // Each source is scored on its own, then weighted: the file name, the name plus its
   // folder ("Explainer Vertical 30/GRK_final.mov"), then each folder walking outwards.
@@ -286,6 +297,8 @@ export function rankAssets(
     .map((asset) => {
       // Already-standard names: an exact title token means certainty.
       if (parts.includes(assetTitleToken(asset))) return { item: asset, score: 1 };
+      // A whole section of the name is the asset's name ("0080_Tug of War_Green Box.mov").
+      const exactSection = sections.includes(asset.slug);
 
       const slugTokens = tokenize(asset.slug).filter((t) => !NOISE.has(t) || /^\d+$/.test(t));
       const identity = slugTokens.filter((t) => !typeWords.has(singular(t)));
@@ -296,7 +309,11 @@ export function rankAssets(
       for (const { tokens, weight } of sources) {
         if (!tokens.length) continue;
         const recall = assetTokens.reduce((s, t) => s + bestSim(t, tokens), 0) / assetTokens.length;
-        const precision = tokens.reduce((s, t) => s + (bestSim(t, assetTokens) >= 0.6 ? 1 : 0), 0) / tokens.length;
+        // Numbers ("16x9", "30") are judged by the number check below, not as unmatched words.
+        const words = tokens.filter((t) => !/^\d+$/.test(t));
+        const precision = words.length
+          ? words.reduce((s, t) => s + (bestSim(t, assetTokens) >= 0.6 ? 1 : 0), 0) / words.length
+          : 0.5;
         const f = recall + precision > 0 ? (2 * recall * precision) / (recall + precision) : 0;
         score = Math.max(score, f * weight);
       }
@@ -312,6 +329,7 @@ export function rankAssets(
         else if (Math.abs(asset.length - facts.duration) > 10) score -= 0.05;
       }
       if (asset.mediaType && facts.mediaType && asset.mediaType !== facts.mediaType) score -= 0.15;
+      if (exactSection) score = Math.max(score, 0.95);
       return { item: asset, score: Math.max(0, Math.min(0.99, score)) };
     })
     .filter((s) => s.score > 0)
