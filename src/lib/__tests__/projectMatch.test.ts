@@ -37,7 +37,9 @@ describe("project matching from vendor codes and asset evidence", () => {
     expect(stf).toContain("ettiquette");
     expect(stf).not.toContain("STF");
     expect(stf.map((q) => q.toLowerCase())).not.toContain("flat");
-    expect(searchQueries("0080_Tug of War_Green Box ONLY.mov", catalog)).toContain("Tug of War");
+    expect(searchQueries("0080_Tug of War_Green Box ONLY.mov", catalog)).toContain("tug of war");
+    // Glued words are spaced out, and long sections also search their leading pair.
+    expect(searchQueries("FH_PawPatrol_AvaMaxCallout_9x16_TXTD.mov", catalog)).toEqual(expect.arrayContaining(["paw patrol", "ava max callout", "ava max"]));
   });
 
   it("a section that is exactly an asset name is near-certain, despite variant words", () => {
@@ -78,4 +80,37 @@ describe("project matching from vendor codes and asset evidence", () => {
   it("code plus words in the name", () => {
     expect(decide("PP3_Paw Patrol Pups ADR Session_9x16 Textless ProResHQ 2398 Split Audio.mov")).toBe("pp3");
   });
+
+  it("a tie between same-named assets goes to the clearly newer project", () => {
+    // Production has "Tug of War" in PAW Patrol: The Dino Movie (2026) and Clifford (2020).
+    const pool = [asset("t1", "Tug of War", "toolkit", "dino"), asset("t2", "Tug of War", "toolkit", "clifford")];
+    const facts = { name: "0080_Tug of War_Green Box ONLY.mov", dirs: [] };
+    const evidence = assetEvidence(facts, pool, catalog);
+    const year = (y: number) => Date.UTC(y, 2, 1) / 1000;
+    expect(chooseProject(new Map(), evidence, new Map([["dino", year(2026)], ["clifford", year(2020)]]))?.item).toBe("dino");
+    // Without dates, or when they're close in age, it stays a question for the user.
+    expect(chooseProject(new Map(), evidence)).toBeUndefined();
+    expect(chooseProject(new Map(), evidence, new Map([["dino", year(2026)], ["clifford", year(2026) - 86400 * 30]]))).toBeUndefined();
+  });
+
+  it("real-world cases from production", () => {
+    // "PP3"/"Paw Patrol" -> the newest PAW Patrol (prefix PAWPATROL3 carries the 3).
+    const paw = [
+      proj("dino", "PAW Patrol: The Dino Movie", "PAWPATROL3"),
+      proj("mighty", "PAW Patrol: The Mighty Movie", "PAWPATROL2"),
+      proj("movie", "PAW Patrol: The Movie", "PAWPATROL"),
+    ];
+    const created = new Map([["dino", 1773253793], ["mighty", 1684966827], ["movie", 1613528900]]);
+    const facts = { name: "PP3_Paw Patrol Pups ADR Session_9x16 Textless ProResHQ 2398 Split Audio.mov", dirs: [] };
+    expect(chooseProject(nameScores(facts, paw), new Map(), created)?.item).toBe("dino");
+    expect(chooseProject(nameScores({ name: "FH_PawPatrol_Something.mov", dirs: [] }, paw), new Map(), created)?.item).toBe("dino");
+
+    // 9x16 picks the Vertical version of an asset, 16x9 the plain one, even with a "vertical-videos" type around.
+    const sf = proj("sf", "Street Fighter", "STREETFIGHTER");
+    const versions = [asset("plain", "Street Fighter - A Brotherhood Forged", "social", "sf"), asset("vert", "Street Fighter - A Brotherhood Forged Vertical", "social", "sf")];
+    const top = (name: string) => rankAssets({ name, dirs: [] }, versions, catalog.types, catalog, sf)[0].item._id;
+    expect(top("SF_AndrewVsNoah_ABrotherhoodForged_TXTL_9x16_Prores.mov")).toBe("vert");
+    expect(top("SF_AndrewVsNoah_ABrotherhoodForged_TXTL_16x9_Prores.mov")).toBe("plain");
+  });
 });
+

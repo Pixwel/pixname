@@ -7,6 +7,8 @@ export interface Project {
   filePrefix?: string;
   studio?: string | { _id?: string; name?: string; slug?: string };
   archived?: boolean;
+  /** Unix seconds. */
+  created?: number;
 }
 
 export interface Asset {
@@ -17,6 +19,8 @@ export interface Asset {
   length?: number;
   mediaType?: string;
   project: string | { _id: string };
+  /** Unix seconds. */
+  created?: number;
 }
 
 export interface AssetType {

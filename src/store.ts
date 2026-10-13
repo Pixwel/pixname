@@ -9,8 +9,11 @@ import { vendorCode } from "./lib/abbrev";
 import { assetEvidence, chooseProject, nameScores, searchQueries } from "./lib/projectMatch";
 import type { Asset, Catalog, FileEntry, Overrides, Probe, Project, QueueItem, WorkRequest } from "./lib/types";
 
-/** Below this score a fuzzy asset guess is left for the user to make. */
+/** A fuzzy asset guess is applied when it scores this well… */
 const ASSET_THRESHOLD = 0.45;
+/** …or when it scores at least this and clearly leads the runner-up. */
+const ASSET_LEAD_THRESHOLD = 0.35;
+const ASSET_LEAD = 0.1;
 const PROBE_CONCURRENCY = 4;
 
 type Loadable<T> = { status: "loading" } | { status: "ready"; data: T } | { status: "error"; error: string };
@@ -90,14 +93,17 @@ export const useStore = create<State>((set, get) => {
     if (learned && projects.some((p) => p._id === learned)) return { id: learned, source: "learned" as const, score: 1 };
 
     const names = nameScores(facts, projects);
+    const created = new Map(projects.map((p) => [p._id, p.created ?? 0]));
     if (Math.max(0, ...names.values()) < 1) {
       const found = (await Promise.all(searchQueries(item.file.name, get().catalog).map(searchAssets))).flat();
       const unique = [...new Map(found.map((a) => [a._id, a])).values()];
+      // Only projects the user can pick count (archived ones aren't listed).
       const evidence = assetEvidence(facts, unique, get().catalog);
-      const best = chooseProject(names, evidence);
+      for (const id of evidence.keys()) if (!created.has(id)) evidence.delete(id);
+      const best = chooseProject(names, evidence, created);
       return best ? { id: best.item, source: "fuzzy" as const, score: best.score } : undefined;
     }
-    const best = chooseProject(names, new Map());
+    const best = chooseProject(names, new Map(), created);
     return best ? { id: best.item, source: "fuzzy" as const, score: best.score } : undefined;
   }
 
@@ -125,8 +131,9 @@ export const useStore = create<State>((set, get) => {
     if (!asset || asset.source === "fuzzy") {
       const assets = await get().ensureAssets(project.id);
       const projectRecord = projects.data.find((p) => p._id === project!.id);
-      const best = rankAssets(facts, assets, get().catalog.types, get().catalog, projectRecord)[0];
-      if (best && best.score >= ASSET_THRESHOLD) {
+      const [best, runnerUp] = rankAssets(facts, assets, get().catalog.types, get().catalog, projectRecord);
+      const leads = best && best.score >= ASSET_LEAD_THRESHOLD && best.score - (runnerUp?.score ?? 0) >= ASSET_LEAD;
+      if (best && (best.score >= ASSET_THRESHOLD || leads)) {
         asset = { id: best.item._id, source: best.score === 1 ? "prefix" : "fuzzy", score: best.score };
       }
     }

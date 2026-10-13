@@ -14,6 +14,15 @@ export function dirsOf(file: { dir: string; relDirs?: string[] }): string[] {
   return parent ? [parent] : [];
 }
 
+/** The frame shape a name describes, from aspect ratios or words ("9x16", "Vert", "16x9", "Square"). */
+export function orientationOf(text: string): "vertical" | "horizontal" | "square" | undefined {
+  const t = text.toLowerCase();
+  if (/(^|[^0-9])9x16($|[^0-9])|\bvert(ical)?\b/.test(t)) return "vertical";
+  if (/(^|[^0-9])1x1($|[^0-9])|\bsquare\b/.test(t)) return "square";
+  if (/(^|[^0-9])16x9($|[^0-9])|(^|[^0-9])2x1($|[^0-9])/.test(t)) return "horizontal";
+  return undefined;
+}
+
 /** Lowercased leading vendor code ("STF_…" -> "stf"); see abbrev.ts vendorCode. */
 function vendorCodeOf(fileName: string): string | undefined {
   const first = fileName.split(/[_\s.]/)[0] ?? "";
@@ -24,6 +33,7 @@ function vendorCodeOf(fileName: string): string | undefined {
 export function tokenize(text: string): string[] {
   return text
     .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
     .replace(/([a-zA-Z])(\d)/g, "$1 $2")
     .replace(/(\d)([a-zA-Z])/g, "$1 $2")
     .toLowerCase()
@@ -261,7 +271,7 @@ export interface FileFacts {
 /** How much a match found only in a folder name counts, by distance from the file. */
 const folderWeight = (depth: number) => Math.max(0.7, 0.92 - depth * 0.05);
 
-const STOP = new Set(["the", "a", "an", "of", "and"]);
+const STOP = new Set(["the", "a", "an", "of", "and", "movie", "film"]);
 
 /** Rank a project's assets against a file and its folders. */
 export function rankAssets(
@@ -278,13 +288,19 @@ export function rankAssets(
   const hintedTypes = new Set(hints.types);
   // Every type word is "context", not asset identity: "Social/Explainer 30" should match on "explainer 30".
   const typeWords = new Set(types.flatMap((t) => tokenize(typeToken(t))).map(singular));
+  // Shape words name a version of an asset ("… Vertical"), even where a type uses them too.
+  for (const w of ["vertical", "square"]) typeWords.delete(w);
   const code = vendorCodeOf(facts.name);
+  // Tags (FLAT, SCOPE, 2K, PRORES…) describe the delivery, not which asset it is.
   const clean = (tokens: string[]) =>
-    tokens.filter((t) => !projectWords.has(t) && !typeWords.has(singular(t)) && t !== code);
+    tokens.filter((t) => !projectWords.has(t) && !typeWords.has(singular(t)) && t !== code && !findTag(catalog.tags, t));
+  const shape = orientationOf([facts.name, ...facts.dirs.slice(0, 1)].join(" "));
 
   // Each source is scored on its own, then weighted: the file name, the name plus its
   // folder ("Explainer Vertical 30/GRK_final.mov"), then each folder walking outwards.
   const fileContent = clean(looseHints(facts.name, catalog).content);
+  // "9x16" means the Vertical version of an asset, "1x1" the Square one.
+  if (shape === "vertical" || shape === "square") fileContent.push(shape);
   const folderContent = facts.dirs.map((d) => clean(looseHints(d, catalog, true).content));
   const sources: { tokens: string[]; weight: number }[] = [{ tokens: fileContent, weight: 1 }];
   if (folderContent[0]?.length) sources.push({ tokens: [...fileContent, ...folderContent[0]], weight: 0.95 });
@@ -301,7 +317,9 @@ export function rankAssets(
       const exactSection = sections.includes(asset.slug);
 
       const slugTokens = tokenize(asset.slug).filter((t) => !NOISE.has(t) || /^\d+$/.test(t));
-      const identity = slugTokens.filter((t) => !typeWords.has(singular(t)));
+      // Asset names often repeat the project ("Street Fighter - A Brotherhood Forged"); like the
+      // file side, judge them on what's left.
+      const identity = slugTokens.filter((t) => !typeWords.has(singular(t)) && !projectWords.has(t));
       const assetTokens = identity.length ? identity : slugTokens;
       if (!assetTokens.length) return { item: asset, score: 0 };
 
@@ -329,11 +347,15 @@ export function rankAssets(
         else if (Math.abs(asset.length - facts.duration) > 10) score -= 0.05;
       }
       if (asset.mediaType && facts.mediaType && asset.mediaType !== facts.mediaType) score -= 0.15;
+      // A vertical/square asset for a file in another shape is the wrong version.
+      const assetShape = slugTokens.includes("vertical") ? "vertical" : slugTokens.includes("square") ? "square" : undefined;
+      if (shape && assetShape && assetShape !== shape) score -= 0.15;
       if (exactSection) score = Math.max(score, 0.95);
       return { item: asset, score: Math.max(0, Math.min(0.99, score)) };
     })
     .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score);
+    // Equal scores (same-named assets) go to the newest.
+    .sort((a, b) => b.score - a.score || (b.item.created ?? 0) - (a.item.created ?? 0));
 }
 
 /** Rank projects against a file name and every folder above it. */
@@ -349,15 +371,23 @@ export function rankProjects(facts: FileFacts, projects: Project[]): Scored<Proj
       // A file or folder that starts with the project's file prefix ("PASSENGER_…", "PASSENGER/").
       if (prefix && sources.some((s) => s.first === prefix)) return { item: project, score: 1 };
       const words = tokenize(project.name).filter((w) => !STOP.has(w));
-      const target = words.length ? words : tokenize(project.filePrefix ?? "");
-      if (!target.length) return { item: project, score: 0 };
+      const full = words.length ? words : tokenize(project.filePrefix ?? "");
+      if (!full.length) return { item: project, score: 0 };
+      // The franchise part of "PAW Patrol: The Dino Movie" counts as much as the full name, so every
+      // PAW Patrol film ties on "Paw Patrol" and recency (or other evidence) decides between them.
+      const main = tokenize(project.name.split(/:| - /)[0]).filter((w) => !STOP.has(w));
+      const targets: [string[], number][] = [[full, 1]];
+      if (main.length && main.length < full.length) targets.push([main, 1]);
       let score = 0;
-      for (const s of sources) {
-        const recall = target.reduce((sum, w) => sum + bestSim(w, s.tokens), 0) / target.length;
-        score = Math.max(score, recall * s.weight);
+      for (const [target, factor] of targets) {
+        for (const s of sources) {
+          const recall = target.reduce((sum, w) => sum + bestSim(w, s.tokens), 0) / target.length;
+          let candidate = recall * s.weight * factor;
+          // Single short words ("Home", "Love") match too easily; demand more for them.
+          if (target.length === 1 && target[0].length <= 4) candidate *= 0.8;
+          score = Math.max(score, candidate);
+        }
       }
-      // Single short words ("Home", "Love") match too easily; demand more for them.
-      if (target.length === 1 && target[0].length <= 4) score *= 0.8;
       return { item: project, score: Math.min(0.99, score) };
     })
     .filter((s) => s.score >= 0.5)

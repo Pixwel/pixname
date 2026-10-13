@@ -4,7 +4,7 @@
 //   - the file's words match an asset that lives in it (cross-project asset search)
 // Each signal alone may be weak or ambiguous; together they usually agree.
 import { abbrevScore, vendorCode } from "./abbrev";
-import { looseHints, rankAssets, rankProjects, type FileFacts, type Scored } from "./fuzzy";
+import { looseHints, rankAssets, rankProjects, tokenize, type FileFacts, type Scored } from "./fuzzy";
 import { findTag } from "./parse";
 import type { Asset, Catalog, Project } from "./types";
 
@@ -16,8 +16,10 @@ import type { Asset, Catalog, Project } from "./types";
 const ABBREV_WEIGHT = 0.75;
 const EVIDENCE_WEIGHT = 0.9;
 export const PROJECT_THRESHOLD = 0.6;
-/** When the top two are this close, the guess is too ambiguous to apply automatically. */
+/** When the top two are this close, the guess is too ambiguous to apply automatically… */
 const AMBIGUITY_MARGIN = 0.1;
+/** …unless one is clearly newer: current work beats old projects ("Tug of War" in 2026 vs 2020). */
+const RECENCY_GAP_SECONDS = 180 * 24 * 60 * 60;
 
 /** Name, folder and vendor-code scores per project id. */
 export function nameScores(facts: FileFacts, projects: Project[]): Map<string, number> {
@@ -39,28 +41,32 @@ export function nameScores(facts: FileFacts, projects: Project[]): Map<string, n
  * - the longest distinctive words, which survive misspellings in the rest of the section
  * The vendor code, tags (PRORES, FLAT) and numbers are skipped.
  */
-export function searchQueries(fileName: string, catalog: Catalog, max = 4): string[] {
+export function searchQueries(fileName: string, catalog: Catalog, max = 5): string[] {
   const base = fileName.replace(/\.[^.]+$/, "");
   const code = vendorCode(fileName);
-  const meaningful = (text: string) => looseHints(text, catalog, true).content.filter((t) => !/^\d+$/.test(t));
+  const words = (text: string) =>
+    looseHints(text, catalog, true).content.filter((t) => !/^\d+$/.test(t) && !findTag(catalog.tags, t));
 
-  const sections = base
-    .split("_")
-    .map((p) => p.trim().replace(/\s+/g, " "))
-    .filter((p) => p && p !== code && !findTag(catalog.tags, p) && meaningful(p).length > 0)
-    .slice(0, 2);
-  const words = looseHints(fileName, catalog)
-    .content.filter((t) => t !== code?.toLowerCase() && t.length >= 3 && !/^\d+$/.test(t) && !findTag(catalog.tags, t))
-    .sort((a, b) => b.length - a.length)
-    .slice(0, 2);
+  const queries: string[] = [];
+  for (const section of base.split("_").filter((p) => p.trim() && p !== code).slice(0, 2)) {
+    const w = words(section);
+    if (!w.length) continue;
+    // Spaced out ("AvaMaxCallout" -> "ava max callout"), and the leading pair ("ava max"),
+    // since asset names often continue past what the vendor wrote.
+    queries.push(tokenize(section).join(" "));
+    if (w.length >= 3) queries.push(w.slice(0, 2).join(" "));
+  }
+  queries.push(
+    ...words(base)
+      .filter((t) => t !== code?.toLowerCase() && t.length >= 3)
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 2),
+  );
 
   const seen = new Set<string>();
-  return [...sections, ...words].filter((q) => {
-    const key = q.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, max);
+  return queries
+    .filter((q) => q.length >= 3 && !seen.has(q.toLowerCase()) && seen.add(q.toLowerCase()))
+    .slice(0, max);
 }
 
 /** Best asset match per project id, from assets found by a cross-project search. */
@@ -78,6 +84,7 @@ export function assetEvidence(facts: FileFacts, assets: Asset[], catalog: Catalo
 export function chooseProject(
   names: Map<string, number>,
   evidence: Map<string, { score: number }>,
+  created: Map<string, number> = new Map(),
 ): Scored<string> | undefined {
   const ids = new Set([...names.keys(), ...evidence.keys()]);
   const ranked = [...ids]
@@ -87,9 +94,15 @@ export function chooseProject(
       return { item: id, score: Math.min(0.99, 1 - (1 - n) * (1 - e)) };
     })
     .sort((a, b) => b.score - a.score);
-  const [best, second] = ranked;
+  const [best] = ranked;
   if (!best || best.score < PROJECT_THRESHOLD) return undefined;
-  if (second && best.score - second.score < AMBIGUITY_MARGIN && best.score < 0.9) return undefined;
-  return best;
-}
+  const tied = ranked.filter((r) => best.score - r.score < AMBIGUITY_MARGIN);
+  // (Exact file prefixes and remembered codes are settled before this, so a near-tie here is real.)
+  if (tied.length === 1) return best;
 
+  // A near-tie goes to the newest project, if it's clearly newer than every other contender.
+  const age = (r: Scored<string>) => created.get(r.item) ?? 0;
+  const [newest, ...others] = [...tied].sort((a, b) => age(b) - age(a));
+  const clearlyNewer = others.every((o) => age(newest) - age(o) >= RECENCY_GAP_SECONDS);
+  return newest.score >= PROJECT_THRESHOLD && age(newest) > 0 && clearlyNewer ? newest : undefined;
+}

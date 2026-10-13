@@ -68,9 +68,11 @@ export function abbrevScore(code: string, project: Project): number {
   let result = 0.7 * score + 0.3 * coverage;
 
   // Sequel numbers: "PP3" fits "Paw Patrol 3" and argues against a title with a different number.
-  const titleNumbers = all.filter((w) => /^\d+$/.test(w));
+  // The file prefix often carries the sequel number the title spells out ("PAWPATROL3").
+  const prefixNumbers = (project.filePrefix ?? "").match(/\d+/g) ?? [];
+  const titleNumbers = [...all.filter((w) => /^\d+$/.test(w)), ...prefixNumbers];
   if (digits) {
-    if (titleNumbers.includes(digits)) result += 0.1;
+    if (titleNumbers.includes(digits)) result += 0.15;
     else if (titleNumbers.length) result -= 0.25;
   }
 
