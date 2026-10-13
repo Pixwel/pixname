@@ -12,9 +12,14 @@ interface DragState {
 
 export const useDrag = create<DragState>(() => ({ dragging: false, count: 0 }));
 
+// Tauri types the drop position as physical pixels, but wry only reports physical pixels on
+// Windows; macOS (AppKit points) and Linux (GTK widget coordinates) are already logical.
+const positionScale = () => (navigator.userAgent.includes("Windows") ? window.devicePixelRatio : 1);
+
 /** Elements opt in with data-drop-project / data-drop-asset / data-drop-label. */
 function targetAt(x: number, y: number): DropTarget & { key?: string; label?: string } {
-  const el = document.elementFromPoint(x / window.devicePixelRatio, y / window.devicePixelRatio);
+  const scale = positionScale();
+  const el = document.elementFromPoint(x / scale, y / scale);
   const hit = el?.closest<HTMLElement>("[data-drop-project]");
   if (!hit) return {};
   const { dropProject, dropAsset, dropLabel } = hit.dataset;

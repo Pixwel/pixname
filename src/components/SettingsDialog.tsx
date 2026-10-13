@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore } from "../store";
 import { apiGet } from "../lib/api";
 import { ENVIRONMENT_URLS, type Environment, type Settings } from "../lib/settings";
+import { useUpdater } from "../updater";
 
 export function SettingsDialog() {
   const current = useStore((s) => s.settings);
@@ -11,6 +12,7 @@ export function SettingsDialog() {
   const [draft, setDraft] = useState<Settings>(current);
   const [test, setTest] = useState<{ ok: boolean; text: string } | null>(null);
   const [testing, setTesting] = useState(false);
+  const updater = useUpdater();
 
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -82,6 +84,18 @@ export function SettingsDialog() {
             <input className="field mono" value={draft.mediainfoPath} placeholder={tools.mediainfo ?? "Not found — ffprobe output is mapped instead"} onChange={(e) => set("mediainfoPath", e.target.value)} />
           </label>
           {test && <div className={`status-line ${test.ok ? "good" : "bad"}`}>{test.text}</div>}
+          <div className="update-row">
+            <span className="muted">Pixname {updater.version ?? ""}</span>
+            <button type="button" className="btn small" disabled={updater.checking} onClick={() => updater.check(true)}>
+              {updater.checking ? "Checking…" : "Check for updates"}
+            </button>
+            {updater.update && (
+              <button type="button" className="btn small primary" disabled={updater.progress !== null} onClick={updater.install}>
+                {updater.progress === null ? `Update to ${updater.update.version}` : `Updating… ${updater.progress}%`}
+              </button>
+            )}
+            {updater.message && !updater.update && <span className="status-line">{updater.message}</span>}
+          </div>
         </div>
         <div className="actions">
           <button type="button" className="btn" disabled={!draft.token || testing} onClick={testConnection}>

@@ -123,6 +123,8 @@ describe("parsing and fuzzy matching", () => {
   it("finds hints in loose names", () => {
     expect(looseHints("passenger_explainer_vertical_French Canadian_TEXTLESS.mov", catalog)).toMatchObject({ language: "CFR", text: "txtl" });
     expect(looseHints("Explainer-30-latam-dubbed.mp4", catalog)).toMatchObject({ language: "LAS", dub: true });
+    expect(looseHints("FH_PawPatrol_AvaMaxCallout_9x16_TXTLS_NoGFX_ProRes422HQ.mov", catalog).text).toBe("txtl");
+    expect(looseHints("STF_In_Theater_Ettiquette_30_INTL_16x9_Texted_Stereo_Audio_Prores.mov", catalog).text).toBe("txtd");
   });
 
   it("ranks the right project from a messy name or its folder", () => {

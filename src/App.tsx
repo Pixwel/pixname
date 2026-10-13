@@ -5,6 +5,7 @@ import { Browse } from "./components/Browse";
 import { Review } from "./components/Review";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { PixwelLogo } from "./components/PixwelLogo";
 import "./styles.css";
 
 function DragBanner() {
@@ -31,6 +32,20 @@ export default function App() {
     init();
   }, []);
 
+  // Esc backs out one level: review -> projects -> start screen.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const s = useStore.getState();
+      if (s.settingsOpen) return s.settings.token ? s.openSettings(false) : undefined;
+      if (document.activeElement instanceof HTMLInputElement && document.activeElement.value) return;
+      if (s.view === "review") s.setView("browse");
+      else if (s.selectedProjectId) s.selectProject(undefined);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (!loaded) return null;
 
   const probeTool = tools.mediainfo ? "mediainfo" : tools.ffprobe ? "ffprobe" : null;
@@ -38,8 +53,18 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark">px</span>Pixname
+        <div
+          className="brand"
+          role="button"
+          title="Back to start"
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            setView("browse");
+            useStore.getState().selectProject(undefined);
+          }}
+        >
+          <PixwelLogo className="brand-mark" />
+          Pixname
         </div>
         <span className={`env ${settings.environment}`}>{settings.environment}</span>
         <span className="spacer" />

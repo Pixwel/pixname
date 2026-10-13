@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e2a3c"/>
+      <stop offset="1" stop-color="#0d121a"/>
+    </linearGradient>
+    <!-- Pixwel logo (small), from platform ui/3x/constants IMAGES.pixwelSm -->
+    <linearGradient id="pixwelSm_0" gradientUnits="userSpaceOnUse" x1="2456.626" y1="-287.691" x2="2456.626" y2="-443.05" gradientTransform="matrix(-1 0 0 1 2610.478 450)">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="pixwelSm_1" gradientUnits="userSpaceOnUse" x1="86.148" y1="-339.191" x2="86.148" y2="-451.9" gradientTransform="translate(0 450)">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#tile)"/>
+  <rect x="100.5" y="100.5" width="823" height="823" rx="184.5" fill="none" stroke="#27354d" stroke-width="1"/>
+  <g transform="translate(212 304) scale(2.5)">
+    <path d="M79.9 167H67.7L182.2.8H240L79.9 167z" fill="url(#pixwelSm_0)"/>
+    <path d="M159.4 167h12.9L57.8.8H0L159.4 167z" fill="url(#pixwelSm_1)"/>
+  </g>
+</svg>

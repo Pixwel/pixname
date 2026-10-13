@@ -67,7 +67,7 @@ const NOISE = new Set([
   "mpeg", "mpeg2", "mov", "mp4", "mxf", "wav", "mp3", "hd", "sd", "uhd", "4k", "2k", "k", "p", "i", "fps",
   "1080", "720", "480", "2160", "1920", "3840", "1280", "23", "976", "98", "2398", "23976", "2997", "29", "97",
   "5994", "59", "94", "x", "final", "master", "approved", "v", "ver", "version",
-  "rev", "txtd", "txtl", "textless", "texted", "clean", "stereo", "mono", "51", "lr", "lt", "rt", "mix",
+  "rev", "txtd", "txtl", "txtls", "txtless", "textless", "texted", "txted", "clean", "stereo", "mono", "51", "lr", "lt", "rt", "mix",
   "sec", "secs", "s", "min", "the", "a", "an", "of", "and", "for", "copy", "new", "export", "render", "output",
 ]);
 
@@ -137,7 +137,9 @@ export function looseHints(name: string, catalog: Catalog, isFolder = false): Lo
     const rev = piece.match(/^REV(\d*)$/i);
     if (rev) hints.version = rev[1] && rev[1] !== "1" ? `REV${rev[1]}` : "REV";
   }
-  if (!hints.text && tokens.includes("textless")) hints.text = "txtl";
+  // Common vendor spellings that aren't tag aliases.
+  if (!hints.text && tokens.some((t) => ["textless", "txtls", "txtless", "clean"].includes(t))) hints.text = "txtl";
+  if (!hints.text && tokens.some((t) => ["texted", "txted"].includes(t))) hints.text = "txtd";
 
   hints.content = tokens.filter((t) => !used.has(t) && !NOISE.has(t) && !/^v\d+$/.test(t) && !/^\d{6,8}$/.test(t));
   return hints;

@@ -1,48 +1,26 @@
+/* Pixwel platform palette (platform ui/3x/theme). The platform is dark-only, so this is too. */
 :root {
-  --bg: #f6f6f4;
-  --panel: #ffffff;
-  --panel-2: #f0f0ed;
-  --line: #e2e2dd;
-  --line-strong: #cfcfc8;
-  --text: #1c1c1a;
-  --muted: #6b6b66;
-  --faint: #9a9a94;
-  --accent: #0f766e;
-  --accent-soft: #ccf0ea;
-  --accent-text: #ffffff;
-  --warn: #a16207;
-  --warn-soft: #fdf1d3;
-  --error: #b42318;
-  --error-soft: #fde4e1;
-  --ok: #15803d;
-  --drop: #0f766e;
+  --bg: #0d121a;          /* midnight-base */
+  --panel: #161e2b;       /* midnight-lighten-5 */
+  --panel-2: #1e2a3c;     /* midnight-lighten-10 */
+  --line: #1e2a3c;        /* midnight-lighten-10 */
+  --line-strong: #27354d; /* midnight-lighten-15 */
+  --text: #fefefe;        /* white */
+  --muted: #9c9d9e;       /* silver-base */
+  --faint: #767778;       /* silver-darken-15 */
+  --accent: #007bff;      /* blue-base */
+  --accent-soft: rgba(0, 123, 255, 0.16);
+  --accent-text: #fefefe;
+  --warn: #ffae00;        /* yellow-base */
+  --warn-soft: rgba(255, 174, 0, 0.14);
+  --error: #ed553b;       /* red-base */
+  --error-soft: rgba(237, 85, 59, 0.15);
+  --ok: #48c289;          /* green-base */
+  --drop: #3395ff;        /* blue-lighten-10 */
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   --radius: 8px;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #141413;
-    --panel: #1c1c1b;
-    --panel-2: #242422;
-    --line: #2e2e2b;
-    --line-strong: #3d3d39;
-    --text: #ecece8;
-    --muted: #a3a39c;
-    --faint: #75756f;
-    --accent: #2dd4bf;
-    --accent-soft: #123b36;
-    --accent-text: #06201d;
-    --warn: #fbbf24;
-    --warn-soft: #3a2e0f;
-    --error: #f87171;
-    --error-soft: #3d1a17;
-    --ok: #4ade80;
-    --drop: #2dd4bf;
-    color-scheme: dark;
-  }
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -68,10 +46,7 @@ input, select, textarea, button { font: inherit; color: inherit; }
   padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
 }
 .brand { font-weight: 700; letter-spacing: -0.01em; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-.brand-mark {
-  width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-text);
-  display: grid; place-items: center; font: 700 12px var(--mono);
-}
+.brand-mark { width: 30px; height: 21px; display: block; }
 .env { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--panel-2); color: var(--muted); }
 .env.staging { background: var(--warn-soft); color: var(--warn); }
 .spacer { flex: 1; }
@@ -234,3 +209,4 @@ label.check { display: inline-flex; align-items: center; gap: 6px; cursor: point
   padding: 10px 12px 10px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line-strong);
   box-shadow: 0 8px 30px rgba(0,0,0,0.18); max-width: 520px;
 }
+.update-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }

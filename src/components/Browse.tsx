@@ -26,7 +26,8 @@ function ProjectRow({ project, active, count }: { project: Project; active: bool
       className={`project-row ${active ? "active" : ""} ${hot ? "drop-hot" : ""}`}
       data-drop-project={project._id}
       data-drop-label={project.name}
-      onClick={() => selectProject(project._id)}
+      onClick={() => selectProject(active ? undefined : project._id)}
+      title={active ? "Click again to close" : undefined}
     >
       <span className="name">{project.name}</span>
       {count ? <span className="count-badge">{count}</span> : null}
@@ -55,6 +56,7 @@ function AssetRow({ asset, project, count }: { asset: Asset; project: Project; c
 }
 
 function ProjectPane({ project }: { project: Project }) {
+  const selectProject = useStore((s) => s.selectProject);
   const assets = useStore((s) => s.assets[project._id]);
   const types = useStore((s) => s.catalog.types);
   const counts = useQueuedCounts();
@@ -92,6 +94,9 @@ function ProjectPane({ project }: { project: Project }) {
           </div>
         </div>
         <input className="field" style={{ width: 240 }} placeholder="Filter assets" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <button className="btn ghost" title="Close project (Esc)" aria-label="Close project" onClick={() => selectProject(undefined)}>
+          ✕
+        </button>
       </div>
       <div className="assets">
         {assets?.status === "loading" && <div className="empty">Loading assets…</div>}

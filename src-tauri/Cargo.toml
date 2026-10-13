@@ -1,6 +1,6 @@
 [package]
 name = "pixname"
-version = "0.2.0"
+version = "0.2.1"
 description = "Rename media to the Pixwel ingest filename standard"
 authors = ["Pixwel"]
 edition = "2024"

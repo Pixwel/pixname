@@ -14,7 +14,7 @@ the same code slurpee3 uses, so output matches what ingest produces.
 - **macOS** (Apple Silicon and Intel): https://github.com/Pixwel/pixname/releases/latest/download/Pixname_universal.dmg
 - **Windows**: https://github.com/Pixwel/pixname/releases/latest/download/Pixname_x64-setup.exe
 
-These links always point to the newest release. Installed copies check for updates on launch and every few hours, then offer **Update and restart**.
+These links always point to the newest release. Installed copies check for updates on launch and every 15 minutes, then offer **Update and restart**. You can also check manually in **Settings → Check for updates**.
 
 Builds aren't notarized yet, so the first time a Mac user opens the app, macOS says it "could not verify" Pixname.
 Click **Done**, then go to **System Settings → Privacy & Security → Open Anyway**. Updates don't trigger the prompt again.
