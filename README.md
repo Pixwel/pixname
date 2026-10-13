@@ -11,17 +11,14 @@ the same code slurpee3 uses, so output matches what ingest produces.
 
 ## Installing
 
-**macOS (no Gatekeeper prompt)**: with the [GitHub CLI](https://cli.github.com) logged in to an account that can see this repo:
+- **macOS** (Apple Silicon and Intel): https://github.com/Pixwel/pixname/releases/latest/download/Pixname_universal.dmg
+- **Windows**: https://github.com/Pixwel/pixname/releases/latest/download/Pixname_x64-setup.exe
 
-```bash
-gh release download -R Pixwel/pixname -p '*.app.tar.gz' -O - | tar -xz -C /Applications
-```
+These links always point to the newest release. Installed copies check for updates on launch and every few hours, then offer **Update and restart**.
 
-Run the same command again to update. Builds aren't notarized yet, so a `.dmg` downloaded in a browser is
-blocked on first launch. To allow it, go to **System Settings → Privacy & Security → Open Anyway**.
-
-**Windows**: download the `.exe` installer from [Releases](https://github.com/Pixwel/pixname/releases).
-If SmartScreen appears, choose **More info → Run anyway**.
+Builds aren't notarized yet, so the first time a Mac user opens the app, macOS says it "could not verify" Pixname.
+Click **Done**, then go to **System Settings → Privacy & Security → Open Anyway**. Updates don't trigger the prompt again.
+On Windows, if SmartScreen appears, click **More info → Run anyway**.
 
 ## Using it
 
@@ -70,7 +67,12 @@ npm run tauri build   # bundle for the current OS
 
 1. Bump `version` in `src-tauri/tauri.conf.json` (and `package.json` / `src-tauri/Cargo.toml` to match).
 2. Commit, then tag and push: `git tag v0.2.0 && git push origin main v0.2.0`.
-3. `.github/workflows/release.yml` builds a universal macOS `.dmg` and Windows `.exe`/`.msi`, then publishes them on the GitHub release.
+3. `.github/workflows/release.yml` builds a universal macOS `.dmg` and Windows `.exe`/`.msi`, then publishes them on the GitHub release
+   together with signed updater bundles and `latest.json`. That file is the feed installed apps check for updates.
+
+Updates are signed with the key in the `TAURI_SIGNING_PRIVATE_KEY` secret (password in `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`).
+The public key is in `tauri.conf.json`. Keep a backup of the private key: if it's lost, installed copies can't
+auto-update, and everyone has to reinstall a build signed with a new key.
 
 The builds are unsigned (macOS uses ad-hoc signing). To sign and notarize, add Apple `APPLE_CERTIFICATE`/`APPLE_ID`/etc.
 secrets and a Windows code-signing certificate, following the Tauri signing guides.

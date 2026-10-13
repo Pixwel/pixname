@@ -4,6 +4,7 @@ import { useDrag, useFileDrop } from "./useFileDrop";
 import { Browse } from "./components/Browse";
 import { Review } from "./components/Review";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { UpdateBanner } from "./components/UpdateBanner";
 import "./styles.css";
 
 function DragBanner() {
@@ -55,6 +56,7 @@ export default function App() {
       </header>
       {view === "browse" ? <Browse /> : <Review />}
       <DragBanner />
+      <UpdateBanner />
       {settingsOpen && <SettingsDialog />}
     </div>
   );

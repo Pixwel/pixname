@@ -55,23 +55,27 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the updater bundles; the app only installs updates signed with this key.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Pixname ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseBody: |
-            ## Install
+            ## Download
 
-            **macOS** (Apple Silicon and Intel). Install from Terminal to avoid the "could not verify" prompt:
+            - **macOS** (Apple Silicon and Intel): [Pixname_universal.dmg](https://github.com/Pixwel/pixname/releases/latest/download/Pixname_universal.dmg)
+            - **Windows**: [Pixname_x64-setup.exe](https://github.com/Pixwel/pixname/releases/latest/download/Pixname_x64-setup.exe)
 
-            ```
-            gh release download -R Pixwel/pixname -p '*.app.tar.gz' -O - | tar -xz -C /Applications
-            ```
+            Installed copies update themselves: Pixname offers the new version when it starts.
 
-            You can also download `Pixname_*_universal.dmg` below. These builds aren't notarized yet, so macOS blocks a
-            browser-downloaded copy on first launch. To allow it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
+            ## First launch on macOS
 
-            **Windows**: `Pixname_*_x64-setup.exe` (or the `.msi`).
-            If SmartScreen appears, click **More info → Run anyway**.
+            This build isn't notarized by Apple yet, so the first time you open it macOS says it "could not verify" Pixname.
+            Click **Done**, open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+            You only need to do this once; updates install without it.
+
+            On Windows, if SmartScreen appears, click **More info → Run anyway**.
 
             ## Requirements
 
@@ -81,6 +85,9 @@ jobs:
             - Windows: `winget install Gyan.FFmpeg`
 
             Then open **Settings** and paste a Pixwel API token (`svc_…` or `pat_…`).
+          # Version-less names keep `releases/latest/download/<name>` links stable.
+          assetNamePattern: "[name]_[arch][setup][ext]"
+          updaterJsonPreferNsis: true
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

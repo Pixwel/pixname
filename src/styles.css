@@ -228,3 +228,9 @@ label.check { display: inline-flex; align-items: center; gap: 6px; cursor: point
 .status-line { font-size: 12px; }
 .status-line.bad { color: var(--error); }
 .status-line.good { color: var(--ok); }
+
+.update-banner {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px 10px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line-strong);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18); max-width: 520px;
+}
