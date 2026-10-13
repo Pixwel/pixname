@@ -59,17 +59,19 @@ jobs:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Pixname ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseBody: |
-            ## Download
+            ## Install
 
-            - **macOS** (Apple Silicon and Intel): `Pixname_*_universal.dmg`
-            - **Windows**: `Pixname_*_x64-setup.exe` (or the `.msi`)
+            **macOS** (Apple Silicon and Intel). Install from Terminal to avoid the "could not verify" prompt:
 
-            ## First launch
+            ```
+            gh release download -R Pixwel/pixname -p '*.app.tar.gz' -O - | tar -xz -C /Applications
+            ```
 
-            These builds are not yet signed with a Pixwel developer certificate.
+            You can also download `Pixname_*_universal.dmg` below. These builds aren't notarized yet, so macOS blocks a
+            browser-downloaded copy on first launch. To allow it, go to **System Settings → Privacy & Security** and click **Open Anyway**.
 
-            - **macOS**: open the app once, then go to **System Settings → Privacy & Security** and click **Open Anyway**.
-            - **Windows**: if SmartScreen appears, click **More info → Run anyway**.
+            **Windows**: `Pixname_*_x64-setup.exe` (or the `.msi`).
+            If SmartScreen appears, click **More info → Run anyway**.
 
             ## Requirements
 

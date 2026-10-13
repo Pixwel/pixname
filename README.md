@@ -9,6 +9,20 @@ PASSENGER_SOCIAL_EXPLAINER-VERTICAL-30_GRK_SUB_DATE_PRORES_1920p2398.mov
 Names are rendered by the real `@pixwel/pixwel-sdk` (`Ingest.renderFilename` and `Ingest.mapFromMediainfo`),
 the same code slurpee3 uses, so output matches what ingest produces.
 
+## Installing
+
+**macOS (no Gatekeeper prompt)**: with the [GitHub CLI](https://cli.github.com) logged in to an account that can see this repo:
+
+```bash
+gh release download -R Pixwel/pixname -p '*.app.tar.gz' -O - | tar -xz -C /Applications
+```
+
+Run the same command again to update. Builds aren't notarized yet, so a `.dmg` downloaded in a browser is
+blocked on first launch. To allow it, go to **System Settings → Privacy & Security → Open Anyway**.
+
+**Windows**: download the `.exe` installer from [Releases](https://github.com/Pixwel/pixname/releases).
+If SmartScreen appears, choose **More info → Run anyway**.
+
 ## Using it
 
 1. **Settings**: choose the environment and paste a service account (`svc_…`) or personal (`pat_…`) token.
