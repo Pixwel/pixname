@@ -1,0 +1,343 @@
+[
+  {
+    "_id": "580f82f2dd27b39787bd04ae",
+    "name": "English",
+    "code": "ENG",
+    "dcpCode": "EN"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04af",
+    "name": "Japanese",
+    "code": "JPN",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b0",
+    "name": "Flemish",
+    "code": "FLE",
+    "dcpCode": "VLS"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b1",
+    "name": "French/Flemish",
+    "code": "PFR-FLE",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b2",
+    "name": "Portuguese-Brazilian",
+    "code": "BPO",
+    "dcpCode": "QBP"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b3",
+    "name": "Bulgarian",
+    "code": "BUL",
+    "dcpCode": "BG"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b4",
+    "name": "French-Canadian",
+    "code": "CFR",
+    "dcpCode": "QFC"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b5",
+    "name": "Mandarin-PRC",
+    "code": "PRC",
+    "dcpCode": "CMN"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b6",
+    "name": "Croatian",
+    "code": "CRO",
+    "dcpCode": "HR"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b7",
+    "name": "Czech",
+    "code": "CZE",
+    "dcpCode": "CS"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b8",
+    "name": "Danish",
+    "code": "DAN",
+    "dcpCode": "DA"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04b9",
+    "name": "Estonian",
+    "code": "EST",
+    "dcpCode": "ET"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04ba",
+    "name": "Estonian/Russian",
+    "code": "EST-RUS",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04bb",
+    "name": "Finnish",
+    "code": "FIN",
+    "dcpCode": "FI"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04bc",
+    "name": "French-Parisian",
+    "code": "PFR",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04bd",
+    "name": "German",
+    "code": "GER",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04be",
+    "name": "Greek",
+    "code": "GRK",
+    "dcpCode": "EL"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04bf",
+    "name": "Cantonese",
+    "code": "CAN",
+    "dcpCode": "YUE"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c0",
+    "name": "Hungarian",
+    "code": "HUN",
+    "dcpCode": "HU"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c1",
+    "name": "Icelandic",
+    "code": "ICE",
+    "dcpCode": "IS"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c2",
+    "name": "Hindi",
+    "code": "HIN",
+    "dcpCode": "HI"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c3",
+    "name": "Malayalam",
+    "code": "MLM",
+    "dcpCode": "MSA"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c4",
+    "name": "Tamil",
+    "code": "TAM",
+    "dcpCode": "TA"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c5",
+    "name": "Telugu",
+    "code": "TEL",
+    "dcpCode": "TE"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c6",
+    "name": "Indonesian",
+    "code": "BAH",
+    "dcpCode": "BH"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c7",
+    "name": "Hebrew",
+    "code": "HEB",
+    "dcpCode": "HE"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c8",
+    "name": "Italian",
+    "code": "ITA",
+    "dcpCode": "IT"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04c9",
+    "name": "Korean",
+    "code": "KOR",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04ca",
+    "name": "Latvian",
+    "code": "LAT",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04cb",
+    "name": "Latvian/Russian",
+    "code": "LAT-RUS",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04cc",
+    "name": "Arabic",
+    "code": "ARA",
+    "dcpCode": "AR"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04cd",
+    "name": "Arabic/French",
+    "code": "ARA-PFR",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04ce",
+    "name": "Latin American Spanish",
+    "code": "LAS",
+    "dcpCode": "LAS"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04cf",
+    "name": "Dutch",
+    "code": "DUT",
+    "dcpCode": "NL"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d0",
+    "name": "Norwegian",
+    "code": "NOR",
+    "dcpCode": "NO"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d1",
+    "name": "Polish",
+    "code": "POL",
+    "dcpCode": "PL"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d2",
+    "name": "Portuguese",
+    "code": "EPT",
+    "dcpCode": "PT"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d3",
+    "name": "Romania",
+    "code": "ROM",
+    "dcpCode": "RO"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d4",
+    "name": "Russian",
+    "code": "RUS",
+    "dcpCode": "RU"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d5",
+    "name": "Serbian",
+    "code": "SER",
+    "dcpCode": "SR"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d6",
+    "name": "Slovak",
+    "code": "SLK",
+    "dcpCode": "SK"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d7",
+    "name": "Slovene",
+    "code": "SLN",
+    "dcpCode": "SL"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d8",
+    "name": "Spanish-Castilian",
+    "code": "CSP",
+    "dcpCode": "ES"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04d9",
+    "name": "Catalan",
+    "code": "CAT",
+    "dcpCode": "CA"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04da",
+    "name": "Swedish",
+    "code": "SWE",
+    "dcpCode": "SV"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04db",
+    "name": "German/French",
+    "code": "GER-PFR",
+    "dcpCode": ""
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04dc",
+    "name": "Mandarin",
+    "code": "MAN",
+    "dcpCode": "QTM"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04dd",
+    "name": "Thai",
+    "code": "THA",
+    "dcpCode": "TH"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04de",
+    "name": "Turkish",
+    "code": "TUR",
+    "dcpCode": "TR"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04df",
+    "name": "Ukrainian",
+    "code": "UKR",
+    "dcpCode": "UK"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e0",
+    "name": "Welsh",
+    "code": "CYM"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e1",
+    "name": "Vietnamese",
+    "code": "VIE",
+    "dcpCode": "VI"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e2",
+    "name": "Gaelic",
+    "code": "GLA",
+    "dcpCode": "GD"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e3",
+    "name": "Lithuania",
+    "code": "LIT",
+    "dcpCode": "LT"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e4",
+    "name": "Bosnian",
+    "code": "BOS",
+    "dcpCode": "BS"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e5",
+    "name": "Malaysia",
+    "code": "MYS",
+    "dcpCode": "MY"
+  },
+  {
+    "_id": "580f82f2dd27b39787bd04e6",
+    "name": "Khmer",
+    "code": "KHM",
+    "dcpCode": ""
+  }
+]

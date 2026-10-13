@@ -1,0 +1,591 @@
+[
+	{
+		"name": "29.97",
+		"type": "Framerate",
+		"aliases": [],
+		"ffprobeRules": { "r_frame_rate": "30000/1001" },
+		"created": null
+	},
+	{
+		"name": "1080i5994",
+		"set": [
+			"prores",
+			"hd",
+			"ntsc",
+			"59.94",
+			"1920x1080",
+			"interlaced",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "2d",
+		"type": "Dimension",
+		"display": "2D",
+		"aliases": ["2D"],
+		"created": null
+	},
+	{
+		"name": "mp3",
+		"type": "Codec",
+		"display": "MPEG-2 Audio Layer III",
+		"aliases": ["MP3"],
+		"extension": "MP3",
+		"ffprobeRules": { "codec_name": "mp3" },
+		"created": null
+	},
+	{
+		"name": "mxf",
+		"type": "Codec",
+		"display": "MXF",
+		"aliases": ["mxf", "Mxf", "MXF", "MSXF"],
+		"file": "MXF",
+		"extension": "mxf",
+		"ffprobeRules": { "codec_name": "mxf" },
+		"created": null
+	},
+	{
+		"name": "ntsc",
+		"type": "Standard",
+		"display": "NTSC",
+		"aliases": [],
+		"file": "NTSC",
+		"created": null
+	},
+	{
+		"name": "txtd4",
+		"type": "Text",
+		"display": "Texted Pass 4",
+		"aliases": ["TXTD4"],
+		"file": "TXTD4",
+		"created": null
+	},
+	{
+		"name": "1280x720",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 1280, "height": 720 },
+		"created": null
+	},
+	{
+		"name": "2K",
+		"parent": "dcp",
+		"type": "Resolution",
+		"aliases": ["2k"],
+		"created": null
+	},
+	{
+		"name": "PAL-16X9",
+		"set": ["prores", "25", "720x576", "16:9", "broadcast", "pal"],
+		"created": null
+	},
+	{
+		"name": "dub",
+		"type": "SubDub",
+		"display": "Dubbed",
+		"aliases": ["DUB"],
+		"file": "DUB",
+		"created": null
+	},
+	{
+		"name": "hfr",
+		"type": "Framerate",
+		"display": "HFR",
+		"aliases": [],
+		"created": null
+	},
+	{
+		"name": "pal",
+		"type": "Standard",
+		"display": "PAL",
+		"aliases": [],
+		"file": "PAL",
+		"created": null
+	},
+	{
+		"name": "progressive",
+		"type": "Frame Mode",
+		"display": "Progressive",
+		"aliases": ["Progressive"],
+		"ffprobeRules": { "field_order": "progressive" },
+		"created": null
+	},
+	{
+		"name": "tif",
+		"type": "Codec",
+		"display": "TIF",
+		"aliases": ["tif", "tiff", "TIF", "TIFF"],
+		"file": "TIF",
+		"extension": "tif",
+		"created": null
+	},
+	{
+		"name": "1080p2997",
+		"set": [
+			"prores",
+			"hd",
+			"ntsc",
+			"29.97",
+			"1920x1080",
+			"progressive",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "3d",
+		"type": "Dimension",
+		"display": "3D",
+		"aliases": ["3D"],
+		"created": null
+	},
+	{
+		"name": "720p",
+		"aliases": ["720P"],
+		"set": ["h264", "1280x720", "online"],
+		"created": null
+	},
+	{
+		"name": "prores",
+		"type": "Codec",
+		"display": "ProRes",
+		"aliases": ["ProRes"],
+		"file": "PRORES",
+		"ffprobeRules": { "codec_name": "prores" },
+		"created": null
+	},
+	{
+		"name": "1080i25",
+		"set": [
+			"prores",
+			"hd",
+			"pal",
+			"25",
+			"1920x1080",
+			"interlaced",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "180p",
+		"aliases": ["180P"],
+		"set": ["h264", "320x180", "online"],
+		"created": null
+	},
+	{
+		"name": "1080p2398",
+		"aliases": ["2398p1080"],
+		"set": ["prores", "hd", "ntsc", "23.98", "1920x1080", "broadcast"],
+		"created": null
+	},
+	{
+		"name": "480p",
+		"aliases": ["480P"],
+		"set": ["h264", "848x480", "online"],
+		"created": null
+	},
+	{ "name": "50", "type": "Framerate", "aliases": [], "created": null },
+	{
+		"name": "anim",
+		"type": "Codec",
+		"display": "Apple Animation",
+		"aliases": ["Anim", "ANIM"],
+		"file": "ANIM",
+		"created": null
+	},
+	{
+		"name": "dcp",
+		"type": "Usage",
+		"display": "DCP",
+		"aliases": ["theatrical", "Theatrical", "DCP"],
+		"file": "DCP",
+		"created": null
+	},
+	{
+		"name": "online",
+		"type": "Usage",
+		"display": "Online",
+		"aliases": [],
+		"created": null
+	},
+	{
+		"name": "txtl2",
+		"type": "Text",
+		"display": "Textless Pass 2",
+		"aliases": ["TXTL2"],
+		"file": "TXTL2",
+		"created": null
+	},
+	{
+		"name": "1920x1080",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 1920, "height": 1080 },
+		"created": null
+	},
+	{
+		"name": "NTSC-16X9",
+		"set": ["prores", "29.97", "720x486", "16:9", "broadcast", "ntsc"],
+		"created": null
+	},
+	{
+		"name": "interlaced",
+		"type": "Frame Mode",
+		"display": "Interlaced",
+		"aliases": ["Interlaced"],
+		"ffprobeRules": { "field_order": ["tt", "bb", "tb", "bt"] },
+		"created": null
+	},
+	{
+		"name": "txtd1",
+		"type": "Text",
+		"display": "Texted Pass 1",
+		"aliases": ["TXTD1"],
+		"file": "TXTD1",
+		"created": null
+	},
+	{
+		"name": "640x480",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 640, "height": 480 },
+		"created": null
+	},
+	{
+		"name": "1080i2997",
+		"set": [
+			"prores",
+			"hd",
+			"ntsc",
+			"29.97",
+			"1920x1080",
+			"interlaced",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "PAL-4X3",
+		"set": ["prores", "25", "720x576", "4:3", "broadcast", "pal"],
+		"created": null
+	},
+	{
+		"name": "broadcast",
+		"type": "Usage",
+		"display": "Broadcast",
+		"aliases": [],
+		"created": null
+	},
+	{
+		"name": "1080i50",
+		"set": [
+			"prores",
+			"hd",
+			"pal",
+			"50",
+			"1920x1080",
+			"interlaced",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "16:9",
+		"type": "Aspect",
+		"aliases": ["16x9", "16X9"],
+		"file": "16X9",
+		"created": null
+	},
+	{ "name": "59.94", "type": "Framerate", "aliases": [], "created": null },
+	{
+		"name": "cmyk",
+		"type": "Usage",
+		"display": "CMYK (Print)",
+		"aliases": ["CMYK"],
+		"file": "CMYK",
+		"created": null
+	},
+	{
+		"name": "txtd3",
+		"type": "Text",
+		"display": "Texted Pass 3",
+		"aliases": ["TXTD3"],
+		"file": "TXTD3",
+		"created": null
+	},
+	{
+		"name": "4K",
+		"parent": "dcp",
+		"type": "Resolution",
+		"aliases": ["4k"],
+		"created": null
+	},
+	{
+		"name": "848x480",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 848, "height": 480 },
+		"created": null
+	},
+	{
+		"name": "23.98",
+		"type": "Framerate",
+		"aliases": [],
+		"ffprobeRules": { "r_frame_rate": "2997/125" },
+		"created": null
+	},
+	{
+		"name": "640x360",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 640, "height": 360 },
+		"created": null
+	},
+	{
+		"name": "txtd",
+		"type": "Text",
+		"display": "Texted",
+		"aliases": ["txtd", "TXTD"],
+		"file": "TXTD",
+		"created": null
+	},
+	{
+		"name": "txtl1",
+		"type": "Text",
+		"display": "Textless Pass 1",
+		"aliases": ["TXTL1"],
+		"file": "TXTL1",
+		"created": null
+	},
+	{
+		"name": "txtl4",
+		"type": "Text",
+		"display": "Textless Pass 4",
+		"aliases": ["TXTL4"],
+		"file": "TXTL4",
+		"created": null
+	},
+	{
+		"name": "flattened",
+		"type": "Text",
+		"display": "Flattened",
+		"aliases": ["FLATTENED"],
+		"file": "FLATTENED",
+		"created": null
+	},
+	{
+		"name": "layered",
+		"type": "Text",
+		"display": "Layered",
+		"aliases": ["LAYERED"],
+		"file": "LAYERED",
+		"created": null
+	},
+	{
+		"name": "sub",
+		"type": "SubDub",
+		"display": "Subtitled",
+		"aliases": ["SUB"],
+		"file": "SUB",
+		"created": null
+	},
+	{
+		"name": "txtl",
+		"type": "Text",
+		"display": "Textless",
+		"aliases": ["txtl", "TXTL"],
+		"file": "TXTL",
+		"created": null
+	},
+	{
+		"name": "1080p24",
+		"set": ["prores", "hd", "24", "1920x1080", "broadcast"],
+		"created": null
+	},
+	{
+		"name": "320x180",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 320, "height": 180 },
+		"created": null
+	},
+	{
+		"name": "720x576",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 720, "height": 576 },
+		"created": null
+	},
+	{
+		"name": "h264",
+		"type": "Codec",
+		"display": "H.264",
+		"aliases": ["h264", "H264", "H.264"],
+		"file": "H264",
+		"ffprobeRules": { "codec_name": "h264" },
+		"created": null
+	},
+	{
+		"name": "mpeg2",
+		"type": "Codec",
+		"display": "MPEG-2",
+		"aliases": ["MPEG2", "Mpeg2", "MPEG-2", "Mpeg-2", "mpeg-2"],
+		"file": "MPEG-2",
+		"extension": "mpg",
+		"ffprobeRules": { "codec_name": "mpeg2video" },
+		"created": null
+	},
+	{
+		"name": "sd",
+		"type": "Definition",
+		"display": "SD",
+		"aliases": ["SD"],
+		"created": null
+	},
+	{
+		"name": "wav",
+		"type": "Codec",
+		"display": "WAVE Audio",
+		"aliases": ["WAV", "WAVE", "wave"],
+		"extension": "WAV",
+		"ffprobeRules": { "codec_name": "wav" },
+		"created": null
+	},
+	{
+		"name": "audio",
+		"type": "Codec",
+		"display": "Audio",
+		"aliases": ["audio", "AUDIO"],
+		"file": "AUDIO",
+		"created": null
+	},
+	{
+		"name": "txtl3",
+		"type": "Text",
+		"display": "Textless Pass 3",
+		"aliases": ["TXTL3"],
+		"file": "TXTL3",
+		"created": null
+	},
+	{
+		"name": "720x486",
+		"type": "Resolution",
+		"aliases": [],
+		"ffprobeRules": { "codec_type": "video", "width": 720, "height": 486 },
+		"created": null
+	},
+	{
+		"name": "1080p25",
+		"set": [
+			"prores",
+			"hd",
+			"pal",
+			"25",
+			"1920x1080",
+			"progressive",
+			"broadcast"
+		],
+		"created": null
+	},
+	{
+		"name": "flat",
+		"parent": "dcp",
+		"type": "Aspect",
+		"display": "Flat",
+		"aliases": ["Flat", "FLAT"],
+		"created": null
+	},
+	{
+		"name": "hd",
+		"type": "Definition",
+		"display": "HD",
+		"aliases": ["HD"],
+		"created": null
+	},
+	{
+		"name": "25",
+		"type": "Framerate",
+		"aliases": [],
+		"ffprobeRules": { "r_frame_rate": "25/1" },
+		"created": null
+	},
+	{
+		"name": "360p",
+		"aliases": ["360P"],
+		"set": ["h264", "640x360", "online"],
+		"created": null
+	},
+	{
+		"name": "NTSC-4X3",
+		"set": ["prores", "29.97", "720x486", "4:3", "broadcast", "ntsc"],
+		"created": null
+	},
+	{
+		"name": "dnxhd",
+		"type": "Codec",
+		"display": "DNXHD",
+		"aliases": ["dnxhd", "DnxHD", "DNXHD"],
+		"file": "DNXHD",
+		"ffprobeRules": { "codec_name": "dnxhd" },
+		"created": null
+	},
+	{
+		"name": "scope",
+		"parent": "dcp",
+		"type": "Aspect",
+		"display": "Scope",
+		"aliases": ["Scope", "SCOPE"],
+		"created": null
+	},
+	{
+		"name": "txtd2",
+		"type": "Text",
+		"display": "Texted Pass 2",
+		"aliases": ["TXTD2"],
+		"file": "TXTD2",
+		"created": null
+	},
+	{
+		"name": "24",
+		"type": "Framerate",
+		"aliases": [],
+		"ffprobeRules": { "r_frame_rate": "24/1" },
+		"created": null
+	},
+	{
+		"name": "4:3",
+		"type": "Aspect",
+		"aliases": ["4x3", "4X3"],
+		"file": "4X3",
+		"created": null
+	},
+	{
+		"name": "previewonly",
+		"type": "Usage",
+		"display": "Preview Only",
+		"aliases": [],
+		"created": null
+	},
+	{
+		"name": "1080i",
+		"type": "Resolution",
+		"aliases": ["1080I"],
+		"created": null
+	},
+	{
+		"name": "1080p",
+		"aliases": ["1080P"],
+		"set": ["h264", "1920x1080", "online"],
+		"created": null
+	},
+	{
+		"name": "rgb",
+		"type": "Usage",
+		"display": "RGB (Online)",
+		"aliases": ["RGB"],
+		"file": "RGB",
+		"created": null
+	}
+]

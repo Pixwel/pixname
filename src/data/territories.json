@@ -1,0 +1,1613 @@
+[
+	{
+		"_id": "51e149cdd5cddce641000000",
+		"name": "Australia",
+		"code": "AU",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Australia",
+				"code": "AU"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000001",
+		"name": "Japan",
+		"code": "JA",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Japan",
+				"code": "JA"
+			}
+		],
+		"languages": [
+			{
+				"name": "Japanese",
+				"code": "JPN",
+				"dcpCode": ""
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04af"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000002",
+		"name": "Belgium",
+		"code": "BE",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Belgium",
+				"code": "BE"
+			}
+		],
+		"languages": [
+			{
+				"name": "Flemish",
+				"code": "FLE",
+				"dcpCode": "VLS"
+			},
+			{
+				"name": "French/Flemish",
+				"code": "PFR-FLE",
+				"dcpCode": ""
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b0",
+			"580f82f2dd27b39787bd04b1"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000003",
+		"name": "Brazil",
+		"code": "BR",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Brazil",
+				"code": "BR"
+			}
+		],
+		"languages": [
+			{
+				"name": "Portuguese-Brazilian",
+				"code": "BPO",
+				"dcpCode": "QBP"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b2"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000004",
+		"name": "Bulgaria",
+		"code": "BG",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Bulgaria",
+				"code": "BG"
+			}
+		],
+		"languages": [
+			{
+				"name": "Bulgarian",
+				"code": "BUL",
+				"dcpCode": "BG"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b3"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000005",
+		"name": "Canada",
+		"code": "CA",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Canada",
+				"code": "CA"
+			}
+		],
+		"languages": [
+			{
+				"name": "French-Canadian",
+				"code": "CFR",
+				"dcpCode": "QFC"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b4"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000007",
+		"name": "China",
+		"code": "CN",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "China",
+				"code": "CN"
+			}
+		],
+		"languages": [
+			{
+				"name": "Mandarin-PRC",
+				"code": "PRC",
+				"dcpCode": "CMN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b5"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000008",
+		"name": "Croatia",
+		"code": "HR",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Croatia",
+				"code": "HR"
+			}
+		],
+		"languages": [
+			{
+				"name": "Croatian",
+				"code": "CRO",
+				"dcpCode": "HR"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b6"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000009",
+		"name": "Czech Republic",
+		"code": "CZ",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Czech Republic",
+				"code": "CZ"
+			}
+		],
+		"languages": [
+			{
+				"name": "Czech",
+				"code": "CZE",
+				"dcpCode": "CS"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b7"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000010",
+		"name": "Denmark",
+		"code": "DK",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Denmark",
+				"code": "DK"
+			}
+		],
+		"languages": [
+			{
+				"name": "Danish",
+				"code": "DAN",
+				"dcpCode": "DA"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b8"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000011",
+		"code": "EE",
+		"countries": [
+			{
+				"name": "Estonia",
+				"code": "EE"
+			}
+		],
+		"languages": [
+			{
+				"name": "Estonian",
+				"code": "EST",
+				"dcpCode": "ET"
+			},
+			{
+				"name": "Estonian/Russian",
+				"code": "EST-RUS",
+				"dcpCode": ""
+			}
+		],
+		"name": "Estonia",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04b9",
+			"580f82f2dd27b39787bd04ba"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000012",
+		"name": "Finland",
+		"code": "FI",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Finland",
+				"code": "FI"
+			}
+		],
+		"languages": [
+			{
+				"name": "Finnish",
+				"code": "FIN",
+				"dcpCode": "FI"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04bb"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000013",
+		"name": "France",
+		"code": "FR",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "France",
+				"code": "FR"
+			}
+		],
+		"languages": [
+			{
+				"name": "French-Parisian",
+				"code": "PFR",
+				"dcpCode": "FR"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04bc"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000014",
+		"name": "Germany",
+		"code": "DE",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Germany",
+				"code": "DE"
+			}
+		],
+		"languages": [
+			{
+				"name": "German",
+				"code": "GER",
+				"dcpCode": "DE"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04bd"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000015",
+		"name": "Greece",
+		"code": "GR",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Greece",
+				"code": "GR"
+			}
+		],
+		"languages": [
+			{
+				"name": "Greek",
+				"code": "GRK",
+				"dcpCode": "EL"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04be"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000016",
+		"name": "Hong Kong",
+		"code": "HK",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Hong Kong",
+				"code": "HK"
+			}
+		],
+		"languages": [
+			{
+				"name": "Cantonese",
+				"code": "CAN",
+				"dcpCode": "YUE"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04bf"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000017",
+		"name": "Hungary",
+		"code": "HU",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Hungary",
+				"code": "HU"
+			}
+		],
+		"languages": [
+			{
+				"name": "Hungarian",
+				"code": "HUN",
+				"dcpCode": "HU"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c0"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000018",
+		"name": "Iceland",
+		"code": "IS",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Iceland",
+				"code": "IS"
+			}
+		],
+		"languages": [
+			{
+				"name": "Icelandic",
+				"code": "ICE",
+				"dcpCode": "IS"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c1"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000019",
+		"name": "India",
+		"code": "IN",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "India",
+				"code": "IN"
+			}
+		],
+		"languages": [
+			{
+				"name": "Hindi",
+				"code": "HIN",
+				"dcpCode": "HI"
+			},
+			{
+				"name": "Malayalam",
+				"code": "MLM",
+				"dcpCode": "MSA"
+			},
+			{
+				"name": "Tamil",
+				"code": "TAM",
+				"dcpCode": "TA"
+			},
+			{
+				"name": "Telugu",
+				"code": "TEL",
+				"dcpCode": "TE"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c2",
+			"580f82f2dd27b39787bd04c3",
+			"580f82f2dd27b39787bd04c4",
+			"580f82f2dd27b39787bd04c5"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000023",
+		"name": "Indonesia",
+		"code": "ID",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Indonesia",
+				"code": "ID"
+			}
+		],
+		"languages": [
+			{
+				"name": "Indonesian",
+				"code": "BAH",
+				"dcpCode": "BH"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c6"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000024",
+		"name": "Israel",
+		"code": "IL",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Israel",
+				"code": "IL"
+			}
+		],
+		"languages": [
+			{
+				"name": "Hebrew",
+				"code": "HEB",
+				"dcpCode": "HE"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c7"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000025",
+		"name": "Italy",
+		"code": "IT",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Italy",
+				"code": "IT"
+			}
+		],
+		"languages": [
+			{
+				"name": "Italian",
+				"code": "ITA",
+				"dcpCode": "IT"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c8"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000026",
+		"name": "Korea",
+		"code": "KR",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Korea",
+				"code": "KR"
+			}
+		],
+		"languages": [
+			{
+				"name": "Korean",
+				"code": "KOR",
+				"dcpCode": ""
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04c9"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000027",
+		"code": "LV",
+		"countries": [
+			{
+				"name": "Latvia",
+				"code": "LV"
+			}
+		],
+		"languages": [
+			{
+				"name": "Latvian",
+				"code": "LAT",
+				"dcpCode": ""
+			},
+			{
+				"name": "Latvian/Russian",
+				"code": "LAT-RUS",
+				"dcpCode": ""
+			}
+		],
+		"name": "Latvia",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ca",
+			"580f82f2dd27b39787bd04cb"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000028",
+		"name": "Lebanon",
+		"code": "LB",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Lebanon",
+				"code": "LB"
+			}
+		],
+		"languages": [
+			{
+				"name": "Arabic",
+				"code": "ARA",
+				"dcpCode": ""
+			},
+			{
+				"name": "Arabic/French",
+				"code": "ARA-PFR",
+				"dcpCode": ""
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04cc",
+			"580f82f2dd27b39787bd04cd"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000029",
+		"name": "Mexico",
+		"code": "MX",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Mexico",
+				"code": "MX"
+			}
+		],
+		"languages": [
+			{
+				"name": "Latin American Spanish",
+				"code": "LAS",
+				"dcpCode": "LAS"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ce"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000030",
+		"name": "Netherlands",
+		"code": "NL",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Netherlands",
+				"code": "NL"
+			}
+		],
+		"languages": [
+			{
+				"name": "Dutch",
+				"code": "DUT",
+				"dcpCode": "NL"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04cf"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000031",
+		"name": "Norway",
+		"code": "NO",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Norway",
+				"code": "NO"
+			}
+		],
+		"languages": [
+			{
+				"name": "Norwegian",
+				"code": "NOR",
+				"dcpCode": "NO"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d0"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000032",
+		"name": "Poland",
+		"code": "PL",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Poland",
+				"code": "PL"
+			}
+		],
+		"languages": [
+			{
+				"name": "Polish",
+				"code": "POL",
+				"dcpCode": "PL"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d1"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000033",
+		"name": "Portugal",
+		"code": "PT",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Portugal",
+				"code": "PT"
+			}
+		],
+		"languages": [
+			{
+				"name": "Portuguese",
+				"code": "EPT",
+				"dcpCode": "PT"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d2"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000034",
+		"name": "Romania",
+		"code": "RO",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Romania",
+				"code": "RO"
+			}
+		],
+		"languages": [
+			{
+				"name": "Romania",
+				"code": "ROM",
+				"dcpCode": "RO"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d3"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000035",
+		"name": "Russia",
+		"code": "RU",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Russia",
+				"code": "RU"
+			}
+		],
+		"languages": [
+			{
+				"name": "Russian",
+				"code": "RUS",
+				"dcpCode": "RU"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d4"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000036",
+		"name": "Serbia",
+		"code": "RS",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Serbia",
+				"code": "RS"
+			}
+		],
+		"languages": [
+			{
+				"name": "Serbian",
+				"code": "SER",
+				"dcpCode": "SR"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d5"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000037",
+		"name": "Slovakia",
+		"code": "SK",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Slovakia",
+				"code": "SK"
+			}
+		],
+		"languages": [
+			{
+				"name": "Slovak",
+				"code": "SLK",
+				"dcpCode": "SK"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d6"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000038",
+		"name": "Slovenia",
+		"code": "SI",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Slovenia",
+				"code": "SI"
+			}
+		],
+		"languages": [
+			{
+				"name": "Slovene",
+				"code": "SLN",
+				"dcpCode": "SL"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d7"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000039",
+		"name": "Spain",
+		"code": "ES",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Spain",
+				"code": "ES"
+			},
+			{
+				"name": "Catalonia, Spain",
+				"code": ""
+			}
+		],
+		"languages": [
+			{
+				"name": "Spanish-Castilian",
+				"code": "CSP",
+				"dcpCode": "ES"
+			},
+			{
+				"name": "Catalan",
+				"code": "CAT",
+				"dcpCode": "CA"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04d8",
+			"580f82f2dd27b39787bd04d9"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000040",
+		"name": "Sweden",
+		"code": "SE",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Sweden",
+				"code": "SE"
+			}
+		],
+		"languages": [
+			{
+				"name": "Swedish",
+				"code": "SWE",
+				"dcpCode": "SV"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04da"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000041",
+		"name": "Switzerland",
+		"code": "CH",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Switzerland",
+				"code": "CH"
+			}
+		],
+		"languages": [
+			{
+				"name": "German",
+				"code": "GER",
+				"dcpCode": ""
+			},
+			{
+				"name": "French-Parisian",
+				"code": "PFR",
+				"dcpCode": ""
+			},
+			{
+				"name": "German/French",
+				"code": "GER-PFR",
+				"dcpCode": ""
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04bd",
+			"580f82f2dd27b39787bd04bc",
+			"580f82f2dd27b39787bd04db"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000042",
+		"name": "Taiwan",
+		"code": "TW",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "Taiwan",
+				"code": "TW"
+			}
+		],
+		"languages": [
+			{
+				"name": "Mandarin",
+				"code": "MAN",
+				"dcpCode": "QTM"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04dc"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000043",
+		"name": "Thailand",
+		"code": "TH",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Thailand",
+				"code": "TH"
+			}
+		],
+		"languages": [
+			{
+				"name": "Thai",
+				"code": "THA",
+				"dcpCode": "TH"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04dd"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000044",
+		"name": "Turkey",
+		"code": "TR",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Turkey",
+				"code": "TR"
+			}
+		],
+		"languages": [
+			{
+				"name": "Turkish",
+				"code": "TUR",
+				"dcpCode": "TR"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04de"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000045",
+		"name": "Ukraine",
+		"code": "UA",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Ukraine",
+				"code": "UA"
+			}
+		],
+		"languages": [
+			{
+				"name": "Ukrainian",
+				"code": "UKR",
+				"dcpCode": "UK"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04df"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000046",
+		"name": "United Arabic Emirates",
+		"code": "AE",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "United Arabic Emirates",
+				"code": "AE"
+			}
+		],
+		"languages": [
+			{
+				"name": "Arabic",
+				"code": "ARA",
+				"dcpCode": "AR"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04cc"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000047",
+		"code": "UK",
+		"countries": [
+			{
+				"name": "United Kingdom",
+				"code": "UK"
+			},
+			{
+				"name": "United Kingdom",
+				"code": "GB"
+			},
+			{
+				"code": "CYM",
+				"name": "Wales"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			},
+			{
+				"name": "Welsh",
+				"code": "CYM"
+			}
+		],
+		"name": "United Kingdom",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae",
+			"580f82f2dd27b39787bd04e0"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000048",
+		"name": "United States",
+		"code": "US",
+		"standard": "NTSC",
+		"countries": [
+			{
+				"name": "United States",
+				"code": "US"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000049",
+		"name": "Vietnam",
+		"code": "VN",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Vietnam",
+				"code": "VN"
+			}
+		],
+		"languages": [
+			{
+				"name": "Vietnamese",
+				"code": "VIE",
+				"dcpCode": "VI"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04e1"
+		]
+	},
+	{
+		"_id": "51e149cdd5cddce641000050",
+		"name": "Worldwide",
+		"code": "WW",
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "534ea7a85d30506d0a836d43",
+		"name": "Ireland",
+		"code": "IE",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Ireland",
+				"code": "IE"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			},
+			{
+				"name": "Gaelic",
+				"code": "GLA",
+				"dcpCode": "GD"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae",
+			"580f82f2dd27b39787bd04e2"
+		]
+	},
+	{
+		"_id": "534ea7a85d30506d0a836d44",
+		"name": "New Zealand",
+		"code": "NZ",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "New Zealand",
+				"code": "NZ"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "5356a01c5d30506d0a836d45",
+		"name": "South Africa",
+		"code": "ZA",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "South Africa",
+				"code": "ZA"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "537261435d30506d0a836d49",
+		"name": "All Countries",
+		"code": "AC",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "All Countries",
+				"code": "AC"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "538f69b45d30506d0a836d4c",
+		"code": "MN",
+		"countries": [
+			{
+				"name": "Mongolia",
+				"code": "MN"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"name": "Mongolia",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "538f69b45d30506d0a836d4d",
+		"code": "SG",
+		"countries": [
+			{
+				"name": "Singapore",
+				"code": "SG"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"name": "Singapore",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "538f69b45d30506d0a836d4e",
+		"name": "Lithuania",
+		"code": "LT",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Lithuania",
+				"code": "LT"
+			}
+		],
+		"languages": [
+			{
+				"name": "Lithuania",
+				"code": "LIT",
+				"dcpCode": "LT"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04e3"
+		]
+	},
+	{
+		"_id": "53a1ab082bb9535a300006d1",
+		"name": "Bosnia",
+		"code": "BS",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Bosnia",
+				"code": "BS"
+			}
+		],
+		"languages": [
+			{
+				"name": "Bosnian",
+				"code": "BOS",
+				"dcpCode": "BS"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04e4"
+		]
+	},
+	{
+		"_id": "53a9af535d30506d0a836d4f",
+		"name": "Malaysia",
+		"code": "MY",
+		"standard": "PAL",
+		"countries": [
+			{
+				"name": "Malaysia",
+				"code": "MY"
+			}
+		],
+		"languages": [
+			{
+				"name": "Malaysia",
+				"code": "MYS",
+				"dcpCode": "MY"
+			},
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04e5",
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "53d91365d86a1518588b4568",
+		"countries": [
+			{
+				"name": "South East Asia",
+				"code": "EA"
+			}
+		],
+		"languages": [
+			{
+				"name": "English",
+				"code": "ENG",
+				"dcpCode": "EN"
+			}
+		],
+		"name": "South East Asia",
+		"code": "EA",
+		"standard": "NTSC",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04ae"
+		]
+	},
+	{
+		"_id": "56d60b414bfe09c8158b4568",
+		"countries": [
+			{
+				"name": "Trinidad",
+				"code": "TT"
+			}
+		],
+		"languages": [],
+		"name": "Trinidad",
+		"code": "TT",
+		"standard": "PAL",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e6db56ebf909430b8b4571",
+		"countries": [],
+		"languages": [],
+		"name": "Egypt",
+		"code": "EG",
+		"standard": "PAL",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e8285402ac468d328b4568",
+		"code": "KH",
+		"countries": [],
+		"languages": [
+			{
+				"name": "Khmer",
+				"code": "KHM",
+				"dcpCode": ""
+			}
+		],
+		"name": "Cambodia",
+		"standard": "PAL",
+		"assignedLanguages": [
+			"580f82f2dd27b39787bd04e6"
+		]
+	},
+	{
+		"_id": "56e84baf14131cfb068b4568",
+		"countries": [
+			{
+				"name": "Austria",
+				"code": "AT"
+			}
+		],
+		"languages": [],
+		"name": "Austria",
+		"code": "AT",
+		"standard": "PAL",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d2801ac46ad068b456a",
+		"countries": [
+			{
+				"name": "Cyprus",
+				"code": "CY"
+			}
+		],
+		"languages": [],
+		"name": "Cyprus",
+		"code": "CY",
+		"standard": "PAL",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d429e1f4603078b4568",
+		"countries": [
+			{
+				"name": "Argentina",
+				"code": "AR"
+			}
+		],
+		"languages": [],
+		"name": "Argentina",
+		"code": "AR",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d559e1f4608078b4568",
+		"countries": [
+			{
+				"name": "Chile",
+				"code": "CL"
+			}
+		],
+		"languages": [],
+		"name": "Chile",
+		"code": "CL",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d6c14131c00078b4569",
+		"countries": [
+			{
+				"name": "Colombia",
+				"code": "CO"
+			}
+		],
+		"languages": [],
+		"name": "Colombia",
+		"code": "CO",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d8c01ac46ab068b4569",
+		"countries": [
+			{
+				"name": "Panama",
+				"code": "PA"
+			}
+		],
+		"languages": [],
+		"name": "Panama",
+		"code": "PA",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84d9d01ac46ae068b4568",
+		"countries": [
+			{
+				"name": "Peru",
+				"code": "PE"
+			}
+		],
+		"languages": [],
+		"name": "Peru",
+		"code": "PE",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84db701ac46ae068b4569",
+		"countries": [
+			{
+				"name": "Philippines",
+				"code": "PH"
+			}
+		],
+		"languages": [],
+		"name": "Philippines",
+		"code": "PH",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84dd29e1f4608078b4569",
+		"countries": [
+			{
+				"name": "Ecuador",
+				"code": "EC"
+			}
+		],
+		"languages": [],
+		"name": "Ecuador",
+		"code": "EC",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84de69e1f4607078b4569",
+		"countries": [
+			{
+				"name": "Paraguay",
+				"code": "PY"
+			}
+		],
+		"languages": [],
+		"name": "Paraguay",
+		"code": "PY",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e84dfc14131cff068b456d",
+		"countries": [
+			{
+				"name": "Uruguay",
+				"code": "UY"
+			}
+		],
+		"languages": [],
+		"name": "Uruguay",
+		"code": "UY",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e8523114131c01078b4569",
+		"countries": [
+			{
+				"name": "Venezuela",
+				"code": "VE"
+			}
+		],
+		"languages": [],
+		"name": "Venezuela",
+		"code": "VE",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e95dcd9e1f46e3528b4573",
+		"countries": [],
+		"languages": [],
+		"name": "LATAM Manager",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e95e5314131c6e538b4579",
+		"countries": [],
+		"languages": [],
+		"name": "ASIA-PAC Manager",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "56e95e6a9e1f46d4528b456b",
+		"countries": [],
+		"languages": [],
+		"name": "EMEA Manager",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "571fe9c9cefd09b03b8b4567",
+		"countries": [
+			{
+				"name": "Bolivia",
+				"code": "BO"
+			}
+		],
+		"languages": [],
+		"name": "Bolivia",
+		"code": "BO",
+		"standard": "NTSC",
+		"assignedLanguages": []
+	},
+	{
+		"_id": "578e1fc6773dd6a60b4c59e7",
+		"name": "Europe Regional",
+		"code": "EU",
+		"countries": [],
+		"languages": [],
+		"assignedLanguages": []
+	},
+	{
+		"_id": "578e1fc6773dd6a60b4c59e8",
+		"name": "Asia Pac Regional",
+		"code": "AS",
+		"countries": [],
+		"languages": [],
+		"assignedLanguages": []
+	},
+	{
+		"_id": "578e1fc6773dd6a60b4c59e9",
+		"name": "Mid East Regional",
+		"code": "ME",
+		"countries": [],
+		"languages": [],
+		"assignedLanguages": []
+	},
+	{
+		"_id": "578e1fc6773dd6a60b4c59ea",
+		"name": "Latam Regional",
+		"code": "LA",
+		"countries": [],
+		"languages": [],
+		"assignedLanguages": []
+	}
+]
