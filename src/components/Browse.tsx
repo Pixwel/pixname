@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../store";
 import { useDropHot } from "../useFileDrop";
+import { PickArt, PickButtons, pickPaths } from "./PickFiles";
 import { assetTitleToken } from "../lib/fuzzy";
 import { formatDuration } from "../lib/media";
 import { typeToken } from "../lib/parse";
@@ -93,6 +94,9 @@ function ProjectPane({ project }: { project: Project }) {
             match assets automatically
           </div>
         </div>
+        <button className="btn" title={`Choose a folder for ${project.name}`} onClick={() => pickPaths("folder", { projectId: project._id })}>
+          Choose…
+        </button>
         <input className="field" style={{ width: 240 }} placeholder="Filter assets" value={query} onChange={(e) => setQuery(e.target.value)} />
         <button className="btn ghost" title="Close project (Esc)" aria-label="Close project" onClick={() => selectProject(undefined)}>
           ✕
@@ -159,12 +163,13 @@ export function Browse() {
       ) : (
         <div className="empty">
           <div>
-            <div className="drop-art">⤓</div>
+            <PickArt />
             <h2>Drop a folder of files</h2>
             <p>
               Drop onto a project or asset to tell Pixname where the files belong, or anywhere on this window and it will
               work out the project and asset from the file names, folders and running times.
             </p>
+            <PickButtons />
           </div>
         </div>
       )}

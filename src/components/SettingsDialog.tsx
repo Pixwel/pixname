@@ -87,7 +87,9 @@ export function SettingsDialog() {
           </label>
           <label>
             <span>mediainfo path (optional, preferred when present)</span>
-            <input className="field mono" value={draft.mediainfoPath} placeholder={tools.mediainfo ?? "Not found — ffprobe output is mapped instead"} onChange={(e) => set("mediainfoPath", e.target.value)} />
+            <input className="field mono" value={draft.mediainfoPath} placeholder={
+              tools.mediainfoBundled ? "Built in (MediaInfo)" : tools.mediainfo ?? "Not found — ffprobe output is mapped instead"
+            } onChange={(e) => set("mediainfoPath", e.target.value)} />
           </label>
           {test && <div className={`status-line ${test.ok ? "good" : "bad"}`}>{test.text}</div>}
           {remembered.length > 0 && (

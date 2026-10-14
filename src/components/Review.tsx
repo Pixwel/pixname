@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { PickArt, PickButtons } from "./PickFiles";
 import { useStore } from "../store";
 import { useProposals, type Row, type RowStatus } from "../useProposals";
 import { durationOf, formatDuration, tagsFromMediainfo } from "../lib/media";
@@ -224,9 +225,10 @@ export function Review() {
         {rows.length === 0 ? (
           <div className="empty">
             <div>
-              <div className="drop-art">⤓</div>
+              <PickArt />
               <h2>No files yet</h2>
               <p>Drop files or folders here, or go back to Projects and drop them onto an asset.</p>
+              <PickButtons />
             </div>
           </div>
         ) : (

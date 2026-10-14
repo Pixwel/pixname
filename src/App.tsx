@@ -83,7 +83,9 @@ function Main() {
           <span className="tool-pill missing" title={catalogWarnings.join("\n")}>Using bundled reference data</span>
         )}
         <span className={`tool-pill ${probeTool ? "" : "missing"}`} title={[tools.mediainfo, tools.ffprobe].filter(Boolean).join("\n")}>
-          {probeTool ? `Reading media with ${probeTool}` : "ffprobe not found — names only"}
+          {probeTool
+            ? `Reading media with ${probeTool}${probeTool === "mediainfo" && tools.mediainfoBundled ? " (built in)" : ""}`
+            : "ffprobe not found — names only"}
         </span>
         {view === "browse" ? (
           <button className="btn" onClick={() => setView("review")}>Review{itemCount ? ` (${itemCount})` : ""}</button>

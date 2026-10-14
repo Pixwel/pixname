@@ -45,8 +45,10 @@ Fuzzy matching also weighs the file's running time against each asset's length, 
 
 ## Requirements
 
-- `ffprobe` (or `mediainfo`, which is preferred when installed) on PATH, or set in Settings.
+- Release builds include the MediaInfo CLI (BSD-2-Clause, license shipped in the app), so installs need nothing else.
+- Dev builds (`npm run tauri dev`) use an installed `mediainfo` or `ffprobe` from PATH, or a path set in Settings.
   Without either, names are still built, but there are no codec/resolution tokens.
+- Lookup order: a path set in Settings, the bundled copy, then PATH and the usual install folders.
 
 ## Development
 
@@ -55,7 +57,13 @@ npm install
 npm run tauri dev     # run the app
 npm test              # naming/matching tests (vitest)
 npm run tauri build   # bundle for the current OS
+
+# Bundle MediaInfo the way release builds do:
+scripts/fetch-mediainfo.sh
+npm run tauri build -- --config src-tauri/tauri.mediainfo.conf.json
 ```
+
+MediaInfo's version and checksums are pinned in `scripts/fetch-mediainfo.sh`; bump all three together.
 
 - `src-tauri/src/lib.rs`: API proxy (avoids CORS), folder expansion, probing, rename/undo journal
 - `src/lib/propose.ts`: merges all context and calls the SDK

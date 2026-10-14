@@ -34,7 +34,7 @@ interface State {
   settings: Settings;
   settingsLoaded: boolean;
   settingsOpen: boolean;
-  tools: { ffprobe?: string | null; mediainfo?: string | null };
+  tools: { ffprobe?: string | null; mediainfo?: string | null; mediainfoBundled?: boolean };
   catalog: Catalog;
   catalogWarnings: string[];
   projects: Loadable<Project[]>;

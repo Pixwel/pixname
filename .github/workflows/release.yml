@@ -16,10 +16,10 @@ jobs:
       matrix:
         include:
           - platform: macos-latest
-            args: --target universal-apple-darwin
+            args: --target universal-apple-darwin --config src-tauri/tauri.mediainfo.conf.json
             rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
           - platform: windows-latest
-            args: ""
+            args: --config src-tauri/tauri.mediainfo.conf.json
             rust-targets: ""
     runs-on: ${{ matrix.platform }}
     steps:
@@ -52,6 +52,11 @@ jobs:
 
       - run: npm test
 
+      # Bundled into the app via tauri.mediainfo.conf.json, so nobody has to install it.
+      - name: Fetch MediaInfo
+        shell: bash
+        run: scripts/fetch-mediainfo.sh
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,14 +82,10 @@ jobs:
 
             On Windows, if SmartScreen appears, click **More info → Run anyway**.
 
-            ## Requirements
+            ## Setup
 
-            Install `ffprobe` (part of FFmpeg) so Pixname can read codec, resolution and frame rate:
-
-            - macOS: `brew install ffmpeg` (optionally `brew install mediainfo`)
-            - Windows: `winget install Gyan.FFmpeg`
-
-            Then open **Settings** and paste a Pixwel API token (`svc_…` or `pat_…`).
+            Open **Settings** and paste a Pixwel API token (`svc_…` or `pat_…`).
+            MediaInfo is built in, so there's nothing else to install.
           # Version-less names keep `releases/latest/download/<name>` links stable.
           assetNamePattern: "[name]_[arch][setup][ext]"
           updaterJsonPreferNsis: true

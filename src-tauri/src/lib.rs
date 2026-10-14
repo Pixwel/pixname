@@ -39,21 +39,38 @@ async fn api_get(
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ToolStatus {
     ffprobe: Option<String>,
     mediainfo: Option<String>,
+    /// The mediainfo in use is the one shipped inside the app.
+    mediainfo_bundled: bool,
 }
 
+fn exe_name(name: &str) -> String {
+    if cfg!(windows) {
+        format!("{name}.exe")
+    } else {
+        name.to_string()
+    }
+}
+
+/// A tool shipped next to the app's own executable (release builds bundle mediainfo as a sidecar).
+fn bundled_tool(name: &str) -> Option<PathBuf> {
+    let dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
+    Some(dir.join(exe_name(name))).filter(|p| p.is_file())
+}
+
+/// A path set in Settings wins, then a bundled copy, then an installed one.
 /// GUI apps on macOS don't inherit the shell PATH, so also look in the usual install locations.
 fn find_tool(configured: Option<String>, name: &str) -> Option<String> {
     if let Some(p) = configured.filter(|p| !p.trim().is_empty()) {
         return Path::new(&p).is_file().then_some(p);
     }
-    let exe = if cfg!(windows) {
-        format!("{name}.exe")
-    } else {
-        name.to_string()
-    };
+    if let Some(p) = bundled_tool(name) {
+        return Some(p.to_string_lossy().into_owned());
+    }
+    let exe = exe_name(name);
     let mut dirs: Vec<PathBuf> = std::env::var_os("PATH")
         .map(|p| std::env::split_paths(&p).collect())
         .unwrap_or_default();
@@ -76,9 +93,13 @@ fn find_tool(configured: Option<String>, name: &str) -> Option<String> {
 
 #[tauri::command]
 fn tool_status(ffprobe: Option<String>, mediainfo: Option<String>) -> ToolStatus {
+    let mediainfo = find_tool(mediainfo, "mediainfo");
+    let mediainfo_bundled = mediainfo.is_some()
+        && bundled_tool("mediainfo").map(|p| p.to_string_lossy().into_owned()) == mediainfo;
     ToolStatus {
         ffprobe: find_tool(ffprobe, "ffprobe"),
-        mediainfo: find_tool(mediainfo, "mediainfo"),
+        mediainfo,
+        mediainfo_bundled,
     }
 }
 
