@@ -2678,7 +2678,7 @@ dependencies = [
 
 [[package]]
 name = "pixname"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "imagesize",
  "reqwest 0.12.28",
