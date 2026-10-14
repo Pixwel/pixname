@@ -323,6 +323,37 @@ fn has_undo(app: tauri::AppHandle) -> bool {
     journal_path(&app).map(|p| p.is_file()).unwrap_or(false)
 }
 
+/// The default macOS menu's About box shows the bundle's icon, which an unbundled dev build lacks
+/// (it shows a generic one). Replace that item with one that carries the app icon explicitly.
+#[cfg(target_os = "macos")]
+fn set_about_icon(app: &tauri::App) -> tauri::Result<()> {
+    use tauri::menu::{AboutMetadata, Menu, MenuItemKind, PredefinedMenuItem};
+
+    let handle = app.handle();
+    let menu = Menu::default(handle)?;
+    if let Some(MenuItemKind::Submenu(app_menu)) = menu.items()?.into_iter().next() {
+        let info = handle.package_info();
+        let config = handle.config();
+        let about = PredefinedMenuItem::about(
+            handle,
+            None,
+            Some(AboutMetadata {
+                name: Some(info.name.clone()),
+                version: Some(info.version.to_string()),
+                copyright: config.bundle.copyright.clone(),
+                authors: config.bundle.publisher.clone().map(|p| vec![p]),
+                // The full-size app icon; the window icon is 32px and renders tiny here.
+                icon: Some(tauri::include_image!("icons/icon.png")),
+                ..Default::default()
+            }),
+        )?;
+        app_menu.remove_at(0)?;
+        app_menu.insert(&about, 0)?;
+    }
+    app.set_menu(menu)?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -334,6 +365,8 @@ pub fn run() {
             #[cfg(desktop)]
             app.handle()
                 .plugin(tauri_plugin_updater::Builder::new().build())?;
+            #[cfg(target_os = "macos")]
+            set_about_icon(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -210,3 +210,30 @@ label.check { display: inline-flex; align-items: center; gap: 6px; cursor: point
   box-shadow: 0 8px 30px rgba(0,0,0,0.18); max-width: 520px;
 }
 .update-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }
+
+/* Startup splash: PIXWEL wordmark under two sweeping searchlights (as on the platform devportal). */
+.splash {
+  position: fixed; inset: 0; z-index: 1000; overflow: hidden; cursor: pointer;
+  background: radial-gradient(ellipse at 50% 110%, #1a1a1a 0%, #000 65%);
+  display: grid; place-items: center;
+  transition: opacity 600ms ease;
+}
+.splash.leaving { opacity: 0; pointer-events: none; }
+.searchlight {
+  position: absolute; bottom: 0; width: 700px; height: 130%; margin-left: -350px;
+  transform-origin: bottom center; pointer-events: none;
+  clip-path: polygon(49% 100%, 51% 100%, 72% 0%, 28% 0%);
+  background: linear-gradient(to top, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.07) 55%, transparent 100%);
+  filter: blur(3px);
+}
+.searchlight.a { left: 30%; animation: sweep-a 3.2s ease-in-out infinite; }
+.searchlight.b { left: 70%; animation: sweep-b 3.8s ease-in-out -1s infinite; }
+@keyframes sweep-a { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(14deg); } }
+@keyframes sweep-b { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-14deg); } }
+.splash-content { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; animation: splash-in 900ms ease-out both; }
+.splash-wordmark { width: min(420px, 70vw); height: auto; display: block; filter: drop-shadow(0 0 24px rgba(255,255,255,0.25)); }
+.splash-caption { color: #9c9d9e; font-size: 13px; letter-spacing: 0.4em; text-transform: uppercase; padding-left: 0.4em; }
+@keyframes splash-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .searchlight, .splash-content { animation: none; }
+}

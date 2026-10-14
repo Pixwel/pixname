@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useStore } from "./store";
-import { propose, type Proposal } from "./lib/propose";
+import { distinguishingExtras } from "./lib/collisions";
+import { propose, type Proposal, type ProposeContext } from "./lib/propose";
 import type { QueueItem } from "./lib/types";
 
 export type RowStatus = "probing" | "ready" | "unchanged" | "warning" | "error";
@@ -28,6 +29,7 @@ export function useProposals(): Row[] {
 
   return useMemo(() => {
     const projectList = projects.status === "ready" ? projects.data : [];
+    const contexts = new Map<Row, ProposeContext>();
     const rows = items.map((item) => {
       const project = projectList.find((p) => p._id === item.project?.id);
       const assetList = item.project ? assets[item.project.id] : undefined;
@@ -37,22 +39,38 @@ export function useProposals(): Row[] {
         item.overrides.workRequestId && wrList?.status === "ready"
           ? wrList.data.find((w) => w._id === item.overrides.workRequestId)
           : undefined;
-      const proposal = propose(item, { catalog, projects: projectList, project, asset, workRequest });
+      const ctx = { catalog, projects: projectList, project, asset, workRequest };
+      const proposal = propose(item, ctx);
       if (!proposal.error && item.asset && !asset && assetList?.status !== "ready") {
         proposal.error = "Loading assets…";
       }
-      return { item, proposal, status: statusOf(item, proposal) };
+      const row = { item, proposal, status: statusOf(item, proposal) };
+      contexts.set(row, ctx);
+      return row;
     });
 
-    // Two files in one folder can't end up with the same name (case-insensitively, for macOS/Windows).
-    const seen = new Map<string, Row[]>();
-    for (const row of rows) {
-      if (!row.proposal.name) continue;
-      const key = `${row.item.file.dir}/${row.proposal.name}`.toLowerCase();
-      seen.set(key, [...(seen.get(key) ?? []), row]);
+    // Files that would share a name usually differ in their original names ("Green Box" /
+    // "White Box"): suggest those words as an Extra token, unless the user already set one.
+    for (const group of collisions(rows)) {
+      const open = group.filter((row) => row.item.overrides.extra === undefined);
+      const extras = distinguishingExtras(
+        open.map((row) => {
+          const { project, asset } = contexts.get(row)!;
+          return { name: row.item.file.name, known: [row.proposal.name!, project?.name ?? "", asset?.name ?? ""] };
+        }),
+      );
+      open.forEach((row, i) => {
+        const extra = extras[i];
+        if (!extra) return;
+        const item = { ...row.item, overrides: { ...row.item.overrides, extra: [...row.proposal.tags.Extra, extra] } };
+        const proposal = propose(item, contexts.get(row)!);
+        proposal.warnings.push(`Added Extra "${extra}" from the original name to tell ${group.length} same-named files apart`);
+        row.proposal = proposal;
+        row.status = statusOf(row.item, proposal);
+      });
     }
-    for (const group of seen.values()) {
-      if (group.length < 2) continue;
+
+    for (const group of collisions(rows)) {
       for (const row of group) {
         row.proposal = { ...row.proposal, error: `Same name as ${group.length - 1} other file(s) — set an Extra token or version to tell them apart` };
         row.status = "error";
@@ -60,4 +78,15 @@ export function useProposals(): Row[] {
     }
     return rows;
   }, [items, catalog, projects, assets, workRequests]);
+}
+
+/** Groups of rows whose proposed names clash in one folder (case-insensitively, for macOS/Windows). */
+function collisions(rows: Row[]): Row[][] {
+  const seen = new Map<string, Row[]>();
+  for (const row of rows) {
+    if (!row.proposal.name || row.proposal.error) continue;
+    const key = `${row.item.file.dir}/${row.proposal.name}`.toLowerCase();
+    seen.set(key, [...(seen.get(key) ?? []), row]);
+  }
+  return [...seen.values()].filter((group) => group.length > 1);
 }

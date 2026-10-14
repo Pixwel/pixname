@@ -6,6 +6,7 @@ import { Review } from "./components/Review";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { PixwelLogo } from "./components/PixwelLogo";
+import { Splash } from "./components/Splash";
 import "./styles.css";
 
 function DragBanner() {
@@ -16,6 +17,15 @@ function DragBanner() {
 }
 
 export default function App() {
+  return (
+    <>
+      <Main />
+      <Splash />
+    </>
+  );
+}
+
+function Main() {
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.settingsLoaded);
   const settings = useStore((s) => s.settings);
