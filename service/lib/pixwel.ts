@@ -13,7 +13,16 @@ export interface Caller {
   env: Environment;
   token: string;
   userId: string;
+  /** Display name for activity views ("Jeff Loiselle"); falls back to username or email. */
+  userName: string;
+  /** Pixwel admins (a group of type "a") see everyone's activity and manage team rules. */
+  isAdmin: boolean;
 }
+
+/** Same test as the platform's Users::is($user, Groups::ADMIN). */
+export const isAdminSession = (session: { roles?: unknown; groups?: unknown }) =>
+  (Array.isArray(session.roles) && session.roles.includes("a")) ||
+  (Array.isArray(session.groups) && session.groups.some((g) => (g as { type?: string })?.type === "a"));
 
 export class HttpError extends Error {
   constructor(
@@ -43,7 +52,7 @@ export async function pixwelGet<T>(caller: Pick<Caller, "env" | "token">, path: 
 }
 
 /** Recent token checks, keyed by a hash of the token (the token itself is never kept). */
-const verified = new Map<string, { userId: string; expires: number }>();
+const verified = new Map<string, { userId: string; userName: string; isAdmin: boolean; expires: number }>();
 const VERIFY_TTL_MS = 5 * 60 * 1000;
 
 /** Who is calling: a Pixwel token is valid if Pixwel's /session accepts it. */
@@ -55,11 +64,31 @@ export async function authenticate(request: Request): Promise<Caller> {
 
   const key = createHash("sha256").update(`${env}:${token}`).digest("hex");
   const cached = verified.get(key);
-  if (cached && cached.expires > Date.now()) return { env, token, userId: cached.userId };
+  if (cached && cached.expires > Date.now()) {
+    return { env, token, userId: cached.userId, userName: cached.userName, isAdmin: cached.isAdmin };
+  }
 
-  const session = await pixwelGet<{ _id?: string; id?: string }>({ env, token }, "session");
+  const session = await pixwelGet<{
+    _id?: string;
+    id?: string;
+    name?: string;
+    username?: string;
+    emailNormal?: string;
+    roles?: unknown;
+    groups?: unknown;
+  }>(
+    { env, token },
+    "session",
+  );
   const userId = session._id ?? session.id;
   if (!userId) throw new HttpError(401, "Pixwel didn't recognise the token");
-  verified.set(key, { userId, expires: Date.now() + VERIFY_TTL_MS });
-  return { env, token, userId };
+  const userName = session.name?.trim() || session.username?.trim() || session.emailNormal?.trim() || "Unknown";
+  const isAdmin = isAdminSession(session);
+  verified.set(key, { userId, userName, isAdmin, expires: Date.now() + VERIFY_TTL_MS });
+  return { env, token, userId, userName, isAdmin };
+}
+
+/** For admin-only actions. */
+export function requireAdmin(caller: Caller) {
+  if (!caller.isAdmin) throw new HttpError(403, "Only Pixwel admins can do this");
 }

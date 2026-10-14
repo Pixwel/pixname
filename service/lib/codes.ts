@@ -2,7 +2,7 @@
 // Each confirmation is a vote; the app weighs a code by how consistently it points at one project.
 import { z } from "zod";
 import { database } from "./db";
-import type { Caller } from "./pixwel";
+import { requireAdmin, type Caller } from "./pixwel";
 
 /** Same shape the app extracts: 2–6 capitals/digits. All-digit codes are sequence numbers, not vendors. */
 export const isVendorCode = (code: string) => /^[A-Z0-9]{2,6}$/.test(code) && !/^\d+$/.test(code);
@@ -73,6 +73,7 @@ export async function addVotes(caller: Caller, votes: z.infer<typeof VoteRequest
 
 /** Correct a code by hand: it now means `projectId` for everyone, and earlier votes elsewhere are dropped. */
 export async function editCode(caller: Caller, { code, projectId }: z.infer<typeof EditRequest>) {
+  requireAdmin(caller);
   const db = await database();
   const now = Math.floor(Date.now() / 1000);
   await db.batch(
@@ -89,6 +90,7 @@ export async function editCode(caller: Caller, { code, projectId }: z.infer<type
 }
 
 export async function forgetCode(caller: Caller, { code, projectId }: z.infer<typeof ForgetRequest>) {
+  requireAdmin(caller);
   const db = await database();
   await db.execute(
     projectId

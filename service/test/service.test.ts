@@ -1,15 +1,17 @@
 import { createClient } from "@libsql/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useDatabase } from "@/lib/db";
+import { database, useDatabase } from "@/lib/db";
 import { addVotes, editCode, forgetCode, isVendorCode, listCodes, VoteRequest } from "@/lib/codes";
 import { buildPrompt, MatchRequest, validate, type Asset, type Project } from "@/lib/match";
 import type { Caller } from "@/lib/pixwel";
 import { aiAvailable, modelConfig } from "@/lib/model";
-import { insights, lookup, nameKey, recordResolutions } from "@/lib/resolutions";
+import { history, insights, lookup, nameKey, recordResolutions, seen, stats, undoRenames } from "@/lib/resolutions";
+import { addRule, deleteRule, listRules, suggestions } from "@/lib/rules";
+import { isAdminSession } from "@/lib/pixwel";
 import * as codesRoute from "@/app/api/codes/route";
 
-const alice: Caller = { env: "production", token: "pat_a", userId: "u-alice" };
-const bob: Caller = { env: "production", token: "pat_b", userId: "u-bob" };
+const alice: Caller = { env: "production", token: "pat_a", userId: "u-alice", userName: "Alice", isAdmin: true };
+const bob: Caller = { env: "production", token: "pat_b", userId: "u-bob", userName: "Bob", isAdmin: false };
 
 describe("vendor codes", () => {
   beforeEach(() => useDatabase(createClient({ url: ":memory:" })));
@@ -46,7 +48,10 @@ describe("vendor codes", () => {
   it("edits a code for everyone and forgets it", async () => {
     await addVotes(alice, [{ code: "FH", projectId: "dino" }]);
     await addVotes(bob, [{ code: "FH", projectId: "dino" }]);
-    await editCode(bob, { code: "FH", projectId: "other" });
+    // Team-wide changes are for admins.
+    await expect(editCode(bob, { code: "FH", projectId: "other" })).rejects.toThrow(/admins/);
+    await expect(forgetCode(bob, { code: "FH" })).rejects.toThrow(/admins/);
+    await editCode(alice, { code: "FH", projectId: "other" });
     expect((await listCodes(alice)).FH).toEqual([expect.objectContaining({ projectId: "other", votes: 1 })]);
     await forgetCode(alice, { code: "FH" });
     expect(await listCodes(alice)).toEqual({});
@@ -195,5 +200,134 @@ describe("team memory", () => {
     expect(report.ai).toEqual({ suggested: 2, kept: 1 });
     expect(report.misses.map((m) => m.name).sort()).toEqual(["b.mov", "c.mov"]);
     expect(report.bySource.find((s) => s.source === "manual")).toEqual({ source: "manual", files: 2, missed: 2 });
+  });
+});
+
+describe("activity: admins see everyone, others only themselves", () => {
+  beforeEach(() => useDatabase(createClient({ url: ":memory:" })));
+
+  const rename = (who: Caller, name: string, extra: Record<string, unknown> = {}) =>
+    recordResolutions(who, [{ name, dirs: [], projectId: "dino", assetId: "tug", source: "fuzzy", guess: null, ...extra } as never]);
+
+  it("recognises admins the way the platform does", () => {
+    expect(isAdminSession({ roles: ["a"] })).toBe(true);
+    expect(isAdminSession({ groups: [{ type: "a" }] })).toBe(true);
+    expect(isAdminSession({ roles: ["s"], groups: [{ type: "s" }] })).toBe(false);
+  });
+
+  it("scopes history and stats", async () => {
+    await rename(alice, "a1.mov", { newName: "PAWPATROL3_A1.mov" });
+    await rename(bob, "b1.mov");
+    await rename(bob, "b2_100%_done.mov");
+
+    expect((await history(alice, { limit: 50 })).rows.map((r) => r.userName).sort()).toEqual(["Alice", "Bob", "Bob"]);
+    expect((await history(bob, { limit: 50, userId: "u-alice" })).rows.every((r) => r.userId === "u-bob")).toBe(true);
+    // Search matches old and new names; % is literal.
+    expect((await history(alice, { limit: 50, q: "PAWPATROL3" })).rows.map((r) => r.name)).toEqual(["a1.mov"]);
+    expect((await history(alice, { limit: 50, q: "100%" })).rows.map((r) => r.name)).toEqual(["b2_100%_done.mov"]);
+
+    expect(await stats(alice)).toMatchObject({ scope: "team", files: 3, people: 2 });
+    expect(await stats(bob)).toMatchObject({ scope: "mine", files: 2, people: 1 });
+    await expect(insights(bob)).rejects.toThrow(/admins/);
+  });
+
+  it("pages history", async () => {
+    for (let i = 0; i < 5; i++) await rename(alice, `f${i}.mov`);
+    const first = await history(alice, { limit: 2 });
+    expect(first.more).toBe(true);
+    const next = await history(alice, { limit: 2, before: first.rows[1].id });
+    expect(next.rows.map((r) => r.name)).toEqual(["f2.mov", "f1.mov"]);
+  });
+
+  it("spots re-deliveries by fingerprint or size and running time", async () => {
+    await rename(bob, "orig.mov", { newName: "PAWPATROL3_X.mov", fingerprint: "fp1", size: 1000, durationSec: 30 });
+    const [byPrint, bySize, own, none] = await seen(alice, [
+      { name: "copy.mov", fingerprint: "fp1" },
+      { name: "other.mov", size: 1000, durationSec: 30.01 },
+      { name: "PAWPATROL3_X.mov", fingerprint: "fp1" }, // the renamed file itself
+      { name: "new.mov", fingerprint: "fp2", size: 5, durationSec: 1 },
+    ]);
+    expect(byPrint).toMatchObject({ newName: "PAWPATROL3_X.mov", userName: "Bob" });
+    expect(bySize).toMatchObject({ name: "orig.mov" });
+    expect(own).toBeNull();
+    expect(none).toBeNull();
+    // Non-admins are only warned about their own renames.
+    expect((await seen(bob, [{ name: "copy.mov", fingerprint: "fp1" }]))[0]).not.toBeNull();
+    const carol: Caller = { env: "production", token: "pat_c", userId: "u-carol", userName: "Carol", isAdmin: false };
+    expect((await seen(carol, [{ name: "copy.mov", fingerprint: "fp1" }]))[0]).toBeNull();
+  });
+
+  it("hides other people's file names from non-admins in team memory", async () => {
+    await rename(alice, "0080_Tug of War_Green Box.mov");
+    const [forBob] = await lookup(bob, ["0081_Tug of War_Green Box.mov"]);
+    const [forAlice] = await lookup(alice, ["0081_Tug of War_Green Box.mov"]);
+    expect(forBob).toMatchObject({ projectId: "dino", assetId: "tug", example: null });
+    expect(forAlice!.example).toBe("0080_Tug of War_Green Box.mov");
+  });
+});
+
+describe("rules workbench", () => {
+  beforeEach(() => useDatabase(createClient({ url: ":memory:" })));
+
+  it("suggests code and asset rules from repeated misses", async () => {
+    const miss = (name: string, projectId: string, assetId: string) =>
+      recordResolutions(alice, [{ name, dirs: [], projectId, assetId, source: "manual", guess: null }]);
+    await miss("FH_PawPatrol_AvaMaxCallout_9x16_TXTD.mov", "dino", "avamax");
+    await miss("FH_PawPatrol_AvaMaxCallout_16x9_TXTL.mov", "dino", "avamax");
+    await miss("FH_Something_Else.mov", "dino", "other");
+
+    const found = await suggestions(alice);
+    expect(found.find((s) => s.kind === "code")).toMatchObject({ key: "FH", projectId: "dino", files: 3 });
+    expect(found.find((s) => s.kind === "asset")).toMatchObject({ key: "paw patrol ava max callout", assetId: "avamax", files: 2 });
+    await expect(suggestions(bob)).rejects.toThrow(/admins/);
+  });
+
+  it("lets admins add and remove asset rules, and everyone read them", async () => {
+    await expect(addRule(bob, { phrase: "Ava Max Callout", projectId: "dino", assetId: "avamax" })).rejects.toThrow(/admins/);
+    await addRule(alice, { phrase: "AvaMaxCallout ProRes", projectId: "dino", assetId: "avamax" });
+    const [rule] = await listRules(bob);
+    expect(rule).toMatchObject({ phrase: "ava max callout", words: ["ava", "max", "callout"], createdBy: "Alice" });
+    await deleteRule(alice, rule.id);
+    expect(await listRules(bob)).toEqual([]);
+  });
+});
+
+describe("database upgrades", () => {
+  it("adds new columns to a table created by an earlier version, keeping its rows", async () => {
+    const old = createClient({ url: ":memory:" });
+    await old.execute(`CREATE TABLE resolutions (id INTEGER PRIMARY KEY, env TEXT NOT NULL, user_id TEXT NOT NULL, name TEXT NOT NULL,
+      name_key TEXT NOT NULL, dirs TEXT NOT NULL DEFAULT '[]', project_id TEXT NOT NULL, asset_id TEXT, source TEXT NOT NULL,
+      guess_project_id TEXT, guess_asset_id TEXT, guess_source TEXT, guess_score REAL, missed INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)`);
+    await old.execute(`INSERT INTO resolutions (env, user_id, name, name_key, project_id, source, created_at) VALUES ('production', 'u-old', 'old.mov', 'old', 'p', 'manual', 1)`);
+    useDatabase(old);
+    await database();
+    const { rows } = await history(alice, { limit: 10 });
+    expect(rows).toEqual([expect.objectContaining({ name: "old.mov", userName: "Unknown", newName: null })]);
+  });
+});
+
+describe("undo", () => {
+  beforeEach(() => useDatabase(createClient({ url: ":memory:" })));
+
+  it("stops an undone rename counting, but keeps it in history", async () => {
+    const row = { name: "STF_Tug of War_Green Box.mov", newName: "SF_X.mov", dirs: [], projectId: "sf", assetId: "tug", source: "fuzzy" as const, guess: null, fingerprint: "fp" };
+    await recordResolutions(bob, [row]);
+    await addVotes(bob, [{ code: "STF", projectId: "sf" }]);
+    expect(await stats(bob)).toMatchObject({ files: 1 });
+
+    // Someone else's undo doesn't touch Bob's rename.
+    expect(await undoRenames(alice, [{ name: row.name, newName: row.newName }])).toBe(0);
+    expect(await undoRenames(bob, [{ name: row.name, newName: row.newName }])).toBe(1);
+
+    expect(await stats(bob)).toMatchObject({ files: 0 });
+    expect(await lookup(bob, [row.name])).toEqual([null]);
+    expect(await seen(bob, [{ name: "copy.mov", fingerprint: "fp" }])).toEqual([null]);
+    expect(await listCodes(bob)).toEqual({});
+    const { rows } = await history(bob, { limit: 10 });
+    expect(rows).toEqual([expect.objectContaining({ name: row.name, undoneAt: expect.any(Number) })]);
+
+    // Renaming it again counts normally.
+    await recordResolutions(bob, [row]);
+    expect(await stats(bob)).toMatchObject({ files: 1 });
   });
 });

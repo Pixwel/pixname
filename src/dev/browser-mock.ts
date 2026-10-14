@@ -53,7 +53,43 @@ export function installBrowserMock() {
         // A pretend Pixname service: one shared code, team memory for "Tug of War", AI for the rest.
         case "service_request": {
           const { path, body } = args as { path: string; body: any };
-          if (path === "api/health") return { ok: true, env: "staging", ai: true, model: "claude-sonnet-5-5 via Anthropic API" };
+          if (path === "api/health")
+            return { ok: true, env: "staging", ai: true, model: "claude-sonnet-5-5 via Anthropic API", user: { id: "u1", name: "Jeff Loiselle", isAdmin: true } };
+          if (path === "api/rules")
+            return { rules: [{ id: 1, phrase: "chun li vert", words: ["chun", "li", "vert"], projectId: "p3", assetId: "a5", createdBy: "Jeff Loiselle", at: 1791900000 }] };
+          if (path.startsWith("api/rules/suggestions"))
+            return {
+              suggestions: [
+                { kind: "code", key: "FH", projectId: "p2", assetId: null, files: 6, share: 1, examples: ["FH_PawPatrol_AvaMaxCallout_9x16.mov", "FH_PawPatrol_Promo.mov"] },
+                { kind: "asset", key: "tug war", projectId: "p1", assetId: "a7", files: 3, share: 1, examples: ["0080_Tug of War_Green Box.mov", "0081_Tug of War_White Box.mov"] },
+              ],
+            };
+          if (path.startsWith("api/activity/history"))
+            return {
+              more: false,
+              rows: [
+                { id: 3, at: 1791945600, userId: "u1", userName: "Jeff Loiselle", name: "0080_Tug of War_Green Box.mov", newName: "COBAB_SOCIAL_TUG-OF-WAR_ENG_TXTD_GREEN-BOX_PRORES_1920p2398.mov", dirs: [], projectId: "p1", assetId: "a7", source: "team", guess: { projectId: "p1", assetId: "a7", source: "team", score: 0.9 }, missed: false, undoneAt: null, size: 1, durationSec: 30 },
+                { id: 2, at: 1791942000, userId: "u2", userName: "Sam Rivera", name: "FH_PawPatrol_Promo.mov", newName: "PAWPATROL_SOCIAL_PROMO_ENG_TXTD_PRORES_1080p2398.mov", dirs: ["Deliveries"], projectId: "p2", assetId: null, source: "manual", guess: null, missed: true, undoneAt: 1791943000, size: 1, durationSec: 15 },
+                { id: 1, at: 1791938400, userId: "u2", userName: "Sam Rivera", name: "STF_In_Theater_Ettiquette_30.mov", newName: "STREETFIGHTER_IN-THEATER_IN-THEATER-ETIQUETTE_ENG_TXTL_PRORES_2048p24.mov", dirs: [], projectId: "p3", assetId: "a6", source: "ai", guess: { projectId: "p3", assetId: "a6", source: "ai", score: 0.85 }, missed: false, size: 1, durationSec: 30 },
+              ],
+            };
+          if (path.startsWith("api/activity/stats"))
+            return {
+              days: 30, scope: "team", files: 42, people: 3, missed: 7,
+              perDay: Array.from({ length: 30 }, (_, i) => ({ day: `2026-09-${String(i + 1).padStart(2, "0")}`, files: (i * 7) % 9, missed: i % 4 === 0 ? 1 : 0 })),
+              perUser: [{ userId: "u1", userName: "Jeff Loiselle", files: 25, missed: 3, last: 0 }, { userId: "u2", userName: "Sam Rivera", files: 17, missed: 4, last: 0 }],
+              perProject: [{ projectId: "p1", files: 20, missed: 2, last: 0 }, { projectId: "p3", files: 14, missed: 1, last: 0 }, { projectId: "p2", files: 8, missed: 4, last: 0 }],
+              bySource: [{ source: "fuzzy", files: 18 }, { source: "team", files: 9 }, { source: "ai", files: 6 }, { source: "manual", files: 5 }, { source: "learned", files: 4 }],
+              ai: { suggested: 8, kept: 6 },
+            };
+          if (path === "api/activity/seen")
+            return {
+              matches: (body.files as { name: string }[]).map((f) =>
+                /green box/i.test(f.name)
+                  ? { id: 9, at: 1791900000, userId: "u2", userName: "Sam Rivera", name: f.name, newName: "COBAB_SOCIAL_TUG-OF-WAR_ENG_TXTD_GREEN-BOX_PRORES_1920p2398.mov", dirs: [], projectId: "p1", assetId: "a7", source: "team", guess: null, missed: false, size: 1, durationSec: 30 }
+                  : null,
+              ),
+            };
           if (path === "api/codes") return { codes: { STF: [{ projectId: "p3", votes: 4, people: 2, updatedAt: 0 }] } };
           if (path === "api/resolutions/lookup")
             return {

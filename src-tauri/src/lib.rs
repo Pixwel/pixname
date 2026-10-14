@@ -223,7 +223,30 @@ struct Probe {
     ffprobe: Option<Value>,
     mediainfo: Option<Value>,
     image: Option<(usize, usize)>,
+    /// Size plus the first and last MB, hashed: the same file delivered again has the same one.
+    fingerprint: Option<String>,
     errors: Vec<String>,
+}
+
+const FINGERPRINT_CHUNK: u64 = 1024 * 1024;
+
+/// Cheap content fingerprint for spotting re-deliveries without reading whole (huge) media files.
+fn fingerprint(path: &str) -> std::io::Result<String> {
+    use sha2::{Digest, Sha256};
+    use std::io::{Read, Seek, SeekFrom};
+    let mut file = std::fs::File::open(path)?;
+    let size = file.metadata()?.len();
+    let mut hasher = Sha256::new();
+    hasher.update(size.to_le_bytes());
+    let mut buf = vec![0u8; FINGERPRINT_CHUNK as usize];
+    let n = file.read(&mut buf)?;
+    hasher.update(&buf[..n]);
+    if size > 2 * FINGERPRINT_CHUNK {
+        file.seek(SeekFrom::End(-(FINGERPRINT_CHUNK as i64)))?;
+        let n = file.read(&mut buf)?;
+        hasher.update(&buf[..n]);
+    }
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 async fn run_json(tool: &str, args: &[&str]) -> Result<Value, String> {
@@ -274,6 +297,10 @@ async fn probe_file(path: String, ffprobe: Option<String>, mediainfo: Option<Str
     }
     if let Ok(size) = imagesize::size(&path) {
         probe.image = Some((size.width, size.height));
+    }
+    match fingerprint(&path) {
+        Ok(f) => probe.fingerprint = Some(f),
+        Err(e) => probe.errors.push(format!("fingerprint: {e}")),
     }
     for e in &probe.errors {
         log::warn!("Probing \"{path}\": {e}");

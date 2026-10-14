@@ -23,6 +23,8 @@ export interface Health {
   env: string;
   ai: boolean;
   model: string;
+  /** Who the token belongs to; admins see everyone's activity and manage team rules. */
+  user?: { id: string; name: string; isAdmin: boolean };
 }
 
 export interface CodeProject {
@@ -40,7 +42,8 @@ export interface TeamMatch {
   similarity: number;
   votes: number;
   people: number;
-  example: string;
+  /** The earlier file it's based on (only shown when it's yours, or to admins). */
+  example: string | null;
 }
 
 export interface AiMatch {
@@ -66,7 +69,80 @@ export interface Resolution {
   assetId: string | null;
   source: MatchSource;
   guess: { projectId: string | null; assetId: string | null; source: MatchSource | null; score: number | null } | null;
+  newName?: string | null;
+  size?: number | null;
+  durationSec?: number | null;
+  fingerprint?: string | null;
 }
+
+export interface HistoryRow {
+  id: number;
+  at: number;
+  userId: string;
+  userName: string;
+  name: string;
+  newName: string | null;
+  dirs: string[];
+  projectId: string;
+  assetId: string | null;
+  source: MatchSource;
+  guess: { projectId: string; assetId: string | null; source: MatchSource; score: number } | null;
+  missed: boolean;
+  /** When the rename was undone (still listed, but it no longer counts). */
+  undoneAt: number | null;
+  size: number | null;
+  durationSec: number | null;
+}
+
+export interface HistoryQuery {
+  q?: string;
+  userId?: string;
+  projectId?: string;
+  source?: MatchSource;
+  missedOnly?: boolean;
+  before?: number;
+  limit?: number;
+}
+
+export interface Stats {
+  days: number;
+  scope: "team" | "mine";
+  files: number;
+  people: number;
+  missed: number;
+  perDay: { day: string; files: number; missed: number }[];
+  perUser: { userId: string; userName: string; files: number; missed: number; last: number }[];
+  perProject: { projectId: string; files: number; missed: number; last: number }[];
+  bySource: { source: MatchSource; files: number }[];
+  ai: { suggested: number; kept: number };
+}
+
+export interface AssetRule {
+  id: number;
+  phrase: string;
+  words: string[];
+  projectId: string;
+  assetId: string;
+  createdBy: string;
+  at: number;
+}
+
+export interface Suggestion {
+  kind: "code" | "asset";
+  key: string;
+  projectId: string;
+  assetId: string | null;
+  files: number;
+  share: number;
+  examples: string[];
+}
+
+const query = (params: Record<string, string | number | boolean | undefined>) => {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") q.set(k, String(v));
+  const s = q.toString();
+  return s ? `?${s}` : "";
+};
 
 export const service = {
   health: (s: Settings) => call<Health>(s, "GET", "api/health"),
@@ -77,6 +153,37 @@ export const service = {
   lookup: async (s: Settings, names: string[]) =>
     (await call<{ matches: (TeamMatch | null)[] }>(s, "POST", "api/resolutions/lookup", { names })).matches,
   record: (s: Settings, resolutions: Resolution[]) => call(s, "POST", "api/resolutions", { resolutions }),
+  undo: (s: Settings, renames: { name: string; newName: string }[]) => call(s, "POST", "api/resolutions/undo", { renames }),
   match: async (s: Settings, files: AiFile[], candidateProjectIds: string[]) =>
     (await call<{ matches: AiMatch[] }>(s, "POST", "api/match", { files, candidateProjectIds })).matches,
+  history: (s: Settings, q: HistoryQuery) =>
+    call<{ rows: HistoryRow[]; more: boolean }>(s, "GET", `api/activity/history${query({ ...q })}`),
+  stats: (s: Settings, days: number) => call<Stats>(s, "GET", `api/activity/stats${query({ days })}`),
+  seen: async (s: Settings, files: { name: string; fingerprint?: string; size?: number; durationSec?: number }[]) =>
+    (await call<{ matches: (HistoryRow | null)[] }>(s, "POST", "api/activity/seen", { files })).matches,
+  rules: async (s: Settings) => (await call<{ rules: AssetRule[] }>(s, "GET", "api/rules")).rules,
+  addRule: (s: Settings, rule: { phrase: string; projectId: string; assetId: string }) => call(s, "POST", "api/rules", rule),
+  deleteRule: (s: Settings, id: number) => call(s, "DELETE", `api/rules${query({ id })}`),
+  suggestions: async (s: Settings, days = 90) =>
+    (await call<{ suggestions: Suggestion[] }>(s, "GET", `api/rules/suggestions${query({ days })}`)).suggestions,
 };
+
+/** A file name's comparable words, split the way the service splits them (camelCase, letters/digits). */
+export function nameWords(name: string): string[] {
+  return (
+    name
+      .replace(/\.[^.]+$/, "")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+      .toLowerCase()
+      .match(/\d+x\d+|[a-z]+|\d+/g) ?? []
+  );
+}
+
+/** The asset rule a file name matches: the most specific one whose words all appear in it. */
+export function ruleFor(name: string, rules: AssetRule[]): AssetRule | undefined {
+  const words = new Set(nameWords(name));
+  return rules
+    .filter((r) => r.words.length && r.words.every((w) => words.has(w)))
+    .sort((a, b) => b.words.length - a.words.length)[0];
+}

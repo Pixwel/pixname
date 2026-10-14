@@ -8,7 +8,7 @@ import { parseFilename } from "./lib/parse";
 import { dirsOf, rankAssets } from "./lib/fuzzy";
 import { vendorCode } from "./lib/abbrev";
 import { assetEvidence, chooseProject, codeStrengths, combine, nameScores, searchQueries, teamStrength } from "./lib/projectMatch";
-import { service, serviceEnabled, type AiFile, type Health, type Resolution, type SharedCodes } from "./lib/service";
+import { ruleFor, service, serviceEnabled, type AiFile, type AssetRule, type Health, type Resolution, type SharedCodes } from "./lib/service";
 import type { Asset, Catalog, FileEntry, Match, MatchSource, Overrides, Probe, Project, QueueItem, WorkRequest } from "./lib/types";
 
 /** A fuzzy asset guess is applied when it scores this well… */
@@ -29,6 +29,8 @@ const AI_APPLY_AT = 0.5;
 const AI_BATCH = 25;
 /** Sources a person chose; nothing automatic replaces them. */
 const CHOSEN: MatchSource[] = ["drop", "manual"];
+/** How much an admin's asset rule counts toward its project. */
+const RULE_STRENGTH = 0.95;
 
 type Loadable<T> = { status: "loading" } | { status: "ready"; data: T } | { status: "error"; error: string };
 
@@ -56,7 +58,7 @@ interface State {
   assets: Record<string, Loadable<Asset[]>>;
   workRequests: Record<string, Loadable<WorkRequest[]>>;
   selectedProjectId?: string;
-  view: "browse" | "review";
+  view: "browse" | "review" | "activity";
   items: QueueItem[];
   lastResults?: RenameResult[];
   canUndo: boolean;
@@ -66,6 +68,11 @@ interface State {
   service: { status: "off" } | { status: "loading" } | { status: "ready"; health: Health } | { status: "error"; error: string };
   /** Vendor codes the whole team has confirmed (from the service). */
   sharedCodes: SharedCodes;
+  /** Admins' asset rules: "a file name containing these words is this asset" (from the service). */
+  assetRules: AssetRule[];
+  /** Pixname-wide rules and activity changed (rules added/removed); views refetch on this. */
+  rulesVersion: number;
+  reloadRules(): Promise<void>;
 
   init(): Promise<void>;
   openSettings(open: boolean): void;
@@ -133,6 +140,9 @@ export const useStore = create<State>((set, get) => {
     const code = vendorCode(item.file.name);
     if (code) for (const [id, strength] of codeStrengths(get().aliases[code], get().sharedCodes[code])) add(id, strength, "learned");
     if (item.team && item.team.similarity >= TEAM_MIN_SIMILARITY) add(item.team.projectId, teamStrength(item.team), "team");
+    // An admin's asset rule is a deliberate decision: nearly as good as the file's own prefix.
+    const rule = ruleFor(item.file.name, get().assetRules);
+    if (rule) add(rule.projectId, RULE_STRENGTH, "rule");
 
     let evidence = new Map<string, { score: number }>();
     if (Math.max(0, ...names.values()) < 1) {
@@ -179,8 +189,11 @@ export const useStore = create<State>((set, get) => {
     // An automatic asset belongs to the project it was found in.
     if (asset && item.project?.id !== project.id && !CHOSEN.includes(asset.source) && !asset.accepted) asset = undefined;
     const team = item.team;
+    const rule = ruleFor(item.file.name, get().assetRules);
     if (asset?.accepted) {
       // Keep what a person accepted.
+    } else if ((!asset || !CHOSEN.includes(asset.source)) && rule && rule.projectId === project.id) {
+      asset = { id: rule.assetId, source: "rule", score: RULE_STRENGTH };
     } else if (
       (!asset || asset.source === "fuzzy") &&
       team?.assetId &&
@@ -235,13 +248,17 @@ export const useStore = create<State>((set, get) => {
   async function loadService() {
     const { settings } = get();
     if (!serviceEnabled(settings)) {
-      set({ service: { status: "off" }, sharedCodes: {} });
+      set({ service: { status: "off" }, sharedCodes: {}, assetRules: [] });
       return;
     }
     set({ service: { status: "loading" } });
     try {
-      const [health, sharedCodes] = await Promise.all([service.health(settings), service.codes(settings)]);
-      set({ service: { status: "ready", health }, sharedCodes });
+      const [health, sharedCodes, assetRules] = await Promise.all([
+        service.health(settings),
+        service.codes(settings),
+        service.rules(settings),
+      ]);
+      set({ service: { status: "ready", health }, sharedCodes, assetRules });
       log.info(`Pixname service connected (${health.ai ? `AI: ${health.model}` : "AI off"}), ${Object.keys(sharedCodes).length} shared codes`);
     } catch (e) {
       set({ service: { status: "error", error: errorText(e) } });
@@ -252,7 +269,7 @@ export const useStore = create<State>((set, get) => {
   const serviceReady = () => get().service.status === "ready";
 
   /** Tell the service how renamed files were resolved: shared codes and team memory for everyone. */
-  function reportRenames(items: QueueItem[]) {
+  function reportRenames(items: QueueItem[], newNames: Map<string, string>) {
     if (!serviceReady() || !items.length) return;
     const settings = get().settings;
     const projects = get().projects.status === "ready" ? (get().projects as { data: Project[] }).data : [];
@@ -267,6 +284,10 @@ export const useStore = create<State>((set, get) => {
         guess: i.guess?.project
           ? { projectId: i.guess.project.id, assetId: i.guess.asset?.id ?? null, source: i.guess.project.source, score: i.guess.project.score }
           : null,
+        newName: newNames.get(i.file.path) ?? null,
+        size: i.file.size,
+        durationSec: durationOf(i.probe) ?? null,
+        fingerprint: i.probe?.fingerprint ?? null,
       }));
     const votes = items.flatMap((i) => {
       const code = vendorCode(i.file.name);
@@ -280,6 +301,32 @@ export const useStore = create<State>((set, get) => {
         .then(() => service.codes(settings))
         .then((sharedCodes) => set({ sharedCodes }))
         .catch((e) => log.warn(`Sharing vendor codes failed: ${errorText(e)}`));
+    }
+  }
+
+  /** Warn about files someone already renamed (same content), so nothing is delivered twice. */
+  async function checkDelivered(ids: string[]) {
+    if (!serviceReady() || !ids.length) return;
+    const items = ids.map((id) => get().items.find((i) => i.id === id)).filter(Boolean) as QueueItem[];
+    try {
+      const matches = await service.seen(
+        get().settings,
+        items.map((i) => ({
+          name: i.file.name,
+          fingerprint: i.probe?.fingerprint,
+          size: i.file.size,
+          durationSec: durationOf(i.probe),
+        })),
+      );
+      items.forEach((item, n) => {
+        const m = matches[n];
+        get().updateItem(item.id, {
+          delivered: m ? { newName: m.newName, name: m.name, userName: m.userName, at: m.at, projectId: m.projectId, assetId: m.assetId } : null,
+        });
+        if (m) log.info(`Already delivered: "${item.file.name}" matches "${m.name}" -> "${m.newName ?? "?"}" (${m.userName})`);
+      });
+    } catch (e) {
+      log.warn(`Delivery check failed: ${errorText(e)}`);
     }
   }
 
@@ -337,6 +384,19 @@ export const useStore = create<State>((set, get) => {
     aliases: {},
     service: { status: "off" },
     sharedCodes: {},
+    assetRules: [],
+    rulesVersion: 0,
+
+    async reloadRules() {
+      if (!serviceReady()) return;
+      const settings = get().settings;
+      const [sharedCodes, assetRules] = await Promise.all([service.codes(settings), service.rules(settings)]);
+      set((s) => ({ sharedCodes, assetRules, rulesVersion: s.rulesVersion + 1 }));
+      // Re-run matching for files nobody has settled yet.
+      get()
+        .items.filter((i) => !i.probing && !(i.project && (CHOSEN.includes(i.project.source) || i.project.accepted)))
+        .forEach((i) => match(i.id));
+    },
 
     async init() {
       const settings = await loadSettings();
@@ -476,6 +536,7 @@ export const useStore = create<State>((set, get) => {
       const ids = fresh.map((i) => i.id);
       await lookupTeam(ids);
       await probeAll(ids);
+      await checkDelivered(ids);
       // AI only for what the rules and the team's history couldn't settle.
       if (get().settings.aiMatching) await get().askAi(ids);
     },
@@ -564,7 +625,10 @@ export const useStore = create<State>((set, get) => {
         set({ aliases });
         saveAliases(get().settings, aliases).catch(() => {});
       }
-      reportRenames(get().items.filter((i) => byFrom.get(i.file.path)?.ok));
+      reportRenames(
+        get().items.filter((i) => byFrom.get(i.file.path)?.ok),
+        new Map(results.filter((r) => r.ok).map((r) => [r.from, r.to.split(/[\\/]/).pop()!])),
+      );
 
       set((s) => ({
         lastResults: results,
@@ -667,6 +731,18 @@ export const useStore = create<State>((set, get) => {
 
     async undo() {
       const results = await invoke<RenameResult[]>("undo_last_rename");
+      // Undone renames shouldn't count in stats, team memory or code votes. Undo results run
+      // new name → old name, so `to` is the original name the rename was recorded under.
+      const reversed = results
+        .filter((r) => r.ok)
+        .map((r) => ({ name: r.to.split(/[\\/]/).pop()!, newName: r.from.split(/[\\/]/).pop()! }));
+      log.info(`Undid ${reversed.length} of ${results.length} rename(s)`);
+      if (serviceReady() && reversed.length) {
+        service
+          .undo(get().settings, reversed)
+          .then(() => get().reloadRules())
+          .catch((e) => log.warn(`Telling the service about the undo failed: ${errorText(e)}`));
+      }
       const byFrom = new Map(results.map((r) => [r.from, r]));
       set((s) => ({
         lastResults: results,

@@ -21,6 +21,8 @@ function Confidence({ match, item }: { match?: Match; item: QueueItem }) {
       return <span className="conf" title="Guessed from the file name and folders — check it">{pct}</span>;
     case "learned":
       return <span className="conf code" title="From a vendor code the team has confirmed before">Code {pct}</span>;
+    case "rule":
+      return <span className="conf rule" title="From an admin's rule for names like this">Rule</span>;
     case "team":
       return (
         <span className="conf team" title={item.team ? `Like "${item.team.example}", renamed by ${item.team.people} ${item.team.people === 1 ? "person" : "people"}` : "From the team's earlier renames"}>
@@ -52,6 +54,12 @@ function ItemRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle():
         <span className={`dot ${status}`} title={status} />
         <div className="names">
           <div className="from mono" title={item.file.path}>{item.file.name}</div>
+          {item.delivered && (
+            <div className="delivered" title={`Renamed before as ${item.delivered.newName ?? "?"}`}>
+              ⚠ Already delivered{item.delivered.newName ? ` as ${item.delivered.newName}` : ""} · {item.delivered.userName},{" "}
+              {new Date(item.delivered.at * 1000).toLocaleDateString()}
+            </div>
+          )}
           {status === "probing" ? (
             <div className="to faint">Reading file…</div>
           ) : proposal.error ? (

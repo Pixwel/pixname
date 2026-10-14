@@ -20,7 +20,7 @@ export function statusOf(item: QueueItem, proposal: Proposal): RowStatus {
   if (item.probing) return "probing";
   if (proposal.error) return "error";
   if (proposal.unchanged) return "unchanged";
-  if (proposal.warnings.length || unsure(item.project) || unsure(item.asset)) return "warning";
+  if (proposal.warnings.length || item.delivered || unsure(item.project) || unsure(item.asset)) return "warning";
   return "ready";
 }
 

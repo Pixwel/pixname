@@ -2723,13 +2723,14 @@ dependencies = [
 
 [[package]]
 name = "pixname"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "imagesize",
  "log",
  "reqwest 0.12.28",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",

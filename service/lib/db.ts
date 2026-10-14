@@ -37,7 +37,44 @@ const SCHEMA = [
      created_at INTEGER NOT NULL
    )`,
   `CREATE INDEX IF NOT EXISTS resolutions_env_created ON resolutions (env, created_at)`,
+  // Rules made from the workbench: a phrase in a file name means this asset (see lib/rules.ts).
+  `CREATE TABLE IF NOT EXISTS asset_rules (
+     id INTEGER PRIMARY KEY,
+     env TEXT NOT NULL,
+     phrase TEXT NOT NULL,
+     project_id TEXT NOT NULL,
+     asset_id TEXT NOT NULL,
+     created_by TEXT NOT NULL,
+     created_by_name TEXT NOT NULL DEFAULT '',
+     created_at INTEGER NOT NULL,
+     UNIQUE (env, phrase)
+   )`,
 ];
+
+/** Columns added after the first release; added to existing databases on startup. */
+const ADDED_COLUMNS: Record<string, [string, string][]> = {
+  resolutions: [
+    ["new_name", "TEXT"],
+    ["user_name", "TEXT NOT NULL DEFAULT ''"],
+    ["size", "INTEGER"],
+    ["duration", "REAL"],
+    ["fingerprint", "TEXT"],
+    // Set when the person undid the rename; undone rows stay in history but count nowhere else.
+    ["undone_at", "INTEGER"],
+  ],
+};
+
+async function migrate(db: Client) {
+  await db.batch(SCHEMA, "write");
+  for (const [table, columns] of Object.entries(ADDED_COLUMNS)) {
+    const { rows } = await db.execute(`PRAGMA table_info(${table})`);
+    const existing = new Set(rows.map((r) => String(r.name)));
+    for (const [name, type] of columns) {
+      if (!existing.has(name)) await db.execute(`ALTER TABLE ${table} ADD COLUMN ${name} ${type}`);
+    }
+  }
+  await db.execute(`CREATE INDEX IF NOT EXISTS resolutions_fingerprint ON resolutions (env, fingerprint)`);
+}
 
 export function db(): Client {
   // Blank values (as copied from .env.example) count as unset.
@@ -51,7 +88,10 @@ export function db(): Client {
 
 /** Creates tables on first use; cheap and idempotent, so there's no migration step to deploy. */
 export async function database(): Promise<Client> {
-  ready ??= db().batch(SCHEMA, "write").then(() => undefined);
+  ready ??= migrate(db()).catch((e) => {
+    ready = undefined; // retry on the next request
+    throw e;
+  });
   await ready;
   return db();
 }

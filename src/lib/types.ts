@@ -98,6 +98,8 @@ export interface Probe {
   ffprobe?: any;
   mediainfo?: any;
   image?: [number, number];
+  /** Content fingerprint (size + first/last MB) for spotting re-deliveries. */
+  fingerprint?: string;
   errors: string[];
 }
 
@@ -112,9 +114,9 @@ export interface FileEntry {
 
 /**
  * How a project/asset was chosen: dropped onto it, the file's own project prefix, a remembered
- * vendor code, the rules (fuzzy), the team's earlier renames, AI, or by hand.
+ * vendor code, an admin's asset rule, the rules (fuzzy), the team's earlier renames, AI, or by hand.
  */
-export type MatchSource = "drop" | "prefix" | "learned" | "fuzzy" | "team" | "ai" | "manual";
+export type MatchSource = "drop" | "prefix" | "learned" | "rule" | "fuzzy" | "team" | "ai" | "manual";
 
 export interface Match {
   id: string;
@@ -153,8 +155,10 @@ export interface QueueItem {
   /** Pixname's own latest suggestion, kept so a rename can report whether it was right. */
   guess?: { project?: Match; asset?: Match };
   /** How the team resolved the most similar earlier file (Pixname service). */
-  team?: { projectId: string; assetId: string | null; similarity: number; votes: number; people: number; example: string } | null;
+  team?: { projectId: string; assetId: string | null; similarity: number; votes: number; people: number; example: string | null } | null;
   /** The AI's suggestion and why (Pixname service). */
   ai?: { projectId: string | null; assetId: string | null; confidence: number; reason: string };
   aiPending?: boolean;
+  /** Someone already renamed this same file (by content), from the Pixname service. */
+  delivered?: { newName: string | null; name: string; userName: string; at: number; projectId: string; assetId: string | null } | null;
 }

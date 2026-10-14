@@ -9,6 +9,7 @@ import { PixwelLogo } from "./components/PixwelLogo";
 import { Splash } from "./components/Splash";
 import { ThemePicker } from "./components/ThemePicker";
 import { LogViewer } from "./components/LogViewer";
+import { Activity } from "./components/Activity";
 import { listen } from "@tauri-apps/api/event";
 import "./styles.css";
 
@@ -34,6 +35,7 @@ function Main() {
   const settings = useStore((s) => s.settings);
   const settingsOpen = useStore((s) => s.settingsOpen);
   const logOpen = useStore((s) => s.logOpen);
+  const serviceReady = useStore((s) => s.service.status === "ready");
   const openSettings = useStore((s) => s.openSettings);
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
@@ -62,7 +64,7 @@ function Main() {
       const s = useStore.getState();
       if (s.settingsOpen) return s.settings.token ? s.openSettings(false) : undefined;
       if (document.activeElement instanceof HTMLInputElement && document.activeElement.value) return;
-      if (s.view === "review") s.setView("browse");
+      if (s.view === "review" || s.view === "activity") s.setView("browse");
       else if (s.selectedProjectId) s.selectProject(undefined);
     };
     window.addEventListener("keydown", onKey);
@@ -100,13 +102,16 @@ function Main() {
             No media reader — names only
           </span>
         )}
-        {view === "browse" ? (
+        {serviceReady && view !== "activity" && (
+          <button className="btn" onClick={() => setView("activity")}>Activity</button>
+        )}
+        {view !== "review" ? (
           <button className="btn" onClick={() => setView("review")}>Review{itemCount ? ` (${itemCount})` : ""}</button>
         ) : null}
         <ThemePicker />
         <button className="btn" onClick={() => openSettings(true)}>Settings</button>
       </header>
-      {view === "browse" ? <Browse /> : <Review />}
+      {view === "browse" ? <Browse /> : view === "activity" ? <Activity /> : <Review />}
       <DragBanner />
       <UpdateBanner />
       {settingsOpen && <SettingsDialog />}
