@@ -7,6 +7,7 @@ import { SettingsDialog } from "./components/SettingsDialog";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { PixwelLogo } from "./components/PixwelLogo";
 import { Splash } from "./components/Splash";
+import { ThemePicker } from "./components/ThemePicker";
 import "./styles.css";
 
 function DragBanner() {
@@ -87,6 +88,7 @@ function Main() {
         {view === "browse" ? (
           <button className="btn" onClick={() => setView("review")}>Review{itemCount ? ` (${itemCount})` : ""}</button>
         ) : null}
+        <ThemePicker />
         <button className="btn" onClick={() => openSettings(true)}>Settings</button>
       </header>
       {view === "browse" ? <Browse /> : <Review />}

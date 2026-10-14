@@ -1,0 +1,547 @@
+/* Pixwel platform themes, copied from Pixwel/platform new-shadcn: ui/3x/tailwind.css.
+   Palette values only; each [data-theme] block swaps the palette and body glow. Keep in sync. */
+:root {
+  /* ------------------------------------------------------------------ */
+  /* Palette — midnight                                                   */
+  /* ------------------------------------------------------------------ */
+  --midnight-base:  217 33% 8%;   /* #0d121a */
+  --midnight-100:   217 32% 13%;  /* #161e2b  lighten-5  */
+  --midnight-200:   216 33% 18%;  /* #1e2a3c  lighten-10 */
+  --midnight-300:   218 33% 23%;  /* #27354d  lighten-15 */
+  --midnight-400:   217 33% 28%;  /* #2f415e  lighten-20 */
+  --midnight-900:   225 29% 3%;   /* #050609  darken-5   */
+
+  /* ------------------------------------------------------------------ */
+  /* Palette — silver                                                     */
+  /* ------------------------------------------------------------------ */
+  --silver-base:    210 1% 62%;   /* #9c9d9e */
+  --silver-100:     180 1% 72%;   /* #b6b7b7  lighten-10 */
+  --silver-200:     0 0% 82%;     /* #d0d0d0  lighten-20 */
+  --silver-700:     210 1% 56%;   /* #8f9091  darken-5   */
+  --silver-800:     210 1% 47%;   /* #767778  darken-15  */
+
+  /* ------------------------------------------------------------------ */
+  /* Palette — blue (primary action color, #265bad)                      */
+  /* ------------------------------------------------------------------ */
+  --blue-base:      216 64% 41%;  /* #265bad */
+  --blue-100:       211 100% 60%; /* #3395ff  lighten-10 of base #007bff */
+  --blue-900:       211 100% 40%; /* #0062cc  darken-10  of base #007bff */
+
+  /* ------------------------------------------------------------------ */
+  /* Palette — green / yellow / red                                       */
+  /* ------------------------------------------------------------------ */
+  --green-base:     152 50% 52%;  /* #48c289 */
+  --yellow-base:    41 100% 50%;  /* #ffae00 */
+  --red-base:       9 83% 58%;    /* #ed553b */
+  --red-900:        9 83% 48%;    /* #e03215  darken-10  */
+
+  /* ------------------------------------------------------------------ */
+  /* Palette — neutrals                                                   */
+  /* ------------------------------------------------------------------ */
+  --white:          0 0% 100%;    /* #fefefe */
+  --black:          0 0% 0%;      /* #000000 */
+
+  /* Semantic values that the "contrast" theme overrides, and the default body glow. */
+  --primary-foreground: 210 40% 98%;
+  --foreground: 210 40% 98%;
+  --body-gradient-start: rgba(38, 91, 173, 0.22);
+  --body-gradient-end-1: rgba(17, 24, 39, 0.98);
+  --body-gradient-end-2: rgba(13, 18, 26, 1);
+}
+
+/* ========================================================================== */
+/* Theme: midnight (default)                                                   */
+/* Applied via data-theme="midnight" on <html> (or absence of data-theme)     */
+/* ========================================================================== */
+[data-theme="midnight"],
+:root:not([data-theme]) {
+  --midnight-base:  217 33% 8%;
+  --midnight-100:   217 32% 13%;
+  --midnight-200:   216 33% 18%;
+  --midnight-300:   218 33% 23%;
+  --midnight-400:   217 33% 28%;
+  --midnight-900:   225 29% 3%;
+  --silver-base:    210 1% 62%;
+  --silver-100:     180 1% 72%;
+  --silver-200:     0 0% 82%;
+  --silver-700:     210 1% 56%;
+  --silver-800:     210 1% 47%;
+  --blue-base:      216 64% 41%;
+  --blue-100:       211 100% 60%;
+  --blue-900:       211 100% 40%;
+  --green-base:     152 50% 52%;
+  --yellow-base:    41 100% 50%;
+  --red-base:       9 83% 58%;
+  --red-900:        9 83% 48%;
+  --panel-strong:   217 33% 15%;
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+}
+
+/* ========================================================================== */
+/* Theme: aurora                                                               */
+/* Deep teal-green dark theme. Applied via data-theme="aurora" on <html>.     */
+/* ========================================================================== */
+[data-theme="aurora"] {
+  /* Palette — forest (replaces midnight) */
+  --midnight-base:  168 40% 7%;   /* #0a1710 */
+  --midnight-100:   168 38% 12%;  /* #122018 */
+  --midnight-200:   168 35% 17%;  /* #1a2e22 */
+  --midnight-300:   168 33% 22%;  /* #233d2d */
+  --midnight-400:   168 31% 27%;  /* #2b4b38 */
+  --midnight-900:   168 45% 4%;   /* #060f09 */
+
+  /* Palette — silver (slightly warmer) */
+  --silver-base:    160 5% 62%;
+  --silver-100:     160 5% 72%;
+  --silver-200:     160 5% 82%;
+  --silver-700:     160 5% 56%;
+  --silver-800:     160 5% 47%;
+
+  /* Palette — primary action: aurora teal */
+  --blue-base:      174 72% 36%;  /* #18a080 */
+  --blue-100:       174 72% 52%;  /* #29d4aa */
+  --blue-900:       174 72% 25%;  /* #116f59 */
+
+  /* Status palette — unchanged semantics, slightly warmer red */
+  --green-base:     142 55% 48%;  /* #38c76a */
+  --yellow-base:    45 100% 50%;  /* #ffb800 */
+  --red-base:       350 75% 55%;  /* #e63355 */
+  --red-900:        350 75% 42%;  /* #b01f3f */
+  --panel-strong:   168 37% 15%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient overrides */
+  --body-gradient-start: rgba(24, 160, 128, 0.18);
+  --body-gradient-end-1: rgba(10, 23, 14, 0.98);
+  --body-gradient-end-2: rgba(6, 15, 9, 1);
+}
+
+[data-theme="aurora"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(24, 160, 128, 0.18)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(10, 23, 14, 0.98)), var(--body-gradient-end-2, rgba(6, 15, 9, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: neon                                                                  */
+/* Deep void-black with electric violet primary and magenta body glow.         */
+/* Applied via data-theme="neon" on <html>.                                     */
+/* ========================================================================== */
+[data-theme="neon"] {
+  /* Palette — void (replaces midnight) — near-black with a purple undertone */
+  --midnight-base:  264 28% 6%;   /* #0c0910 */
+  --midnight-100:   264 26% 10%;  /* #14101a */
+  --midnight-200:   264 24% 15%;  /* #1e1829 */
+  --midnight-300:   264 22% 20%;  /* #292039 */
+  --midnight-400:   264 20% 26%;  /* #352948 */
+  --midnight-900:   264 35% 3%;   /* #060408 */
+
+  /* Palette — silver (cool violet-tinted) */
+  --silver-base:    260 8% 62%;   /* #9b99a8 */
+  --silver-100:     260 8% 72%;   /* #b4b2bf */
+  --silver-200:     260 8% 82%;   /* #ceccd7 */
+  --silver-700:     260 8% 56%;   /* #8d8a9a */
+  --silver-800:     260 8% 47%;   /* #777480 */
+
+  /* Palette — primary action: electric violet */
+  --blue-base:      271 91% 60%;  /* #8b2cf5 */
+  --blue-100:       271 95% 72%;  /* #aa63f8 */
+  --blue-900:       271 91% 44%;  /* #6510cc */
+
+  /* Status palette — cyberpunk tints */
+  --green-base:     150 80% 45%;  /* #16c266 */
+  --yellow-base:    52 100% 50%;  /* #ffcc00 */
+  --red-base:       330 90% 56%;  /* #f01472 */
+  --red-900:        330 90% 42%;  /* #b80e55 */
+  --panel-strong:   264 25% 13%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient — magenta/violet glow at top */
+  --body-gradient-start: rgba(139, 44, 245, 0.22);
+  --body-gradient-end-1: rgba(12, 9, 16, 0.99);
+  --body-gradient-end-2: rgba(6, 4, 8, 1);
+}
+
+[data-theme="neon"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(139, 44, 245, 0.22)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(12, 9, 16, 0.99)), var(--body-gradient-end-2, rgba(6, 4, 8, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: solstice                                                             */
+/* Deep arctic-blue dark theme with an icy cyan primary glow.                  */
+/* Applied via data-theme="solstice" on <html>.                                */
+/* ========================================================================== */
+[data-theme="solstice"] {
+  /* Palette — deep glacial navy */
+  --midnight-base:  210 38% 7%;   /* #0b1218 */
+  --midnight-100:   210 34% 11%;  /* #131d26 */
+  --midnight-200:   210 31% 16%;  /* #1c2a35 */
+  --midnight-300:   210 28% 21%;  /* #263844 */
+  --midnight-400:   210 25% 27%;  /* #334757 */
+  --midnight-900:   210 45% 4%;   /* #06090c */
+
+  /* Palette — silver with cold blue tint */
+  --silver-base:    205 11% 62%;  /* #92a0ab */
+  --silver-100:     205 11% 72%;  /* #aeb9c1 */
+  --silver-200:     205 11% 82%;  /* #cad1d7 */
+  --silver-700:     205 11% 56%;  /* #83919c */
+  --silver-800:     205 11% 47%;  /* #6a7984 */
+
+  /* Palette — primary action: icy cyan */
+  --blue-base:      190 88% 48%;  /* #0fc7e6 */
+  --blue-100:       190 92% 62%;  /* #46daf3 */
+  --blue-900:       190 88% 34%;  /* #0a8ea4 */
+
+  /* Status palette — cooler tones */
+  --green-base:     156 58% 47%;  /* #32bd86 */
+  --yellow-base:    45 100% 55%;  /* #ffbf19 */
+  --red-base:       4 84% 60%;    /* #ef5644 */
+  --red-900:        4 84% 45%;    /* #d03320 */
+  --panel-strong:   210 33% 14%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient — frosty cyan glow */
+  --body-gradient-start: rgba(15, 199, 230, 0.2);
+  --body-gradient-end-1: rgba(11, 18, 24, 0.99);
+  --body-gradient-end-2: rgba(6, 9, 12, 1);
+}
+
+[data-theme="solstice"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(15, 199, 230, 0.2)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(11, 18, 24, 0.99)), var(--body-gradient-end-2, rgba(6, 9, 12, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: verdigris                                                            */
+/* Dark oxidized-copper theme with a patina teal primary.                      */
+/* Applied via data-theme="verdigris" on <html>.                               */
+/* ========================================================================== */
+[data-theme="verdigris"] {
+  /* Palette — aged bronze / slate */
+  --midnight-base:  195 18% 8%;   /* #11181a */
+  --midnight-100:   194 17% 12%;  /* #192224 */
+  --midnight-200:   193 16% 17%;  /* #243032 */
+  --midnight-300:   192 15% 22%;  /* #303f41 */
+  --midnight-400:   191 14% 27%;  /* #3b4c4f */
+  --midnight-900:   196 20% 4%;   /* #080b0c */
+
+  /* Palette — silver with sea-glass tint */
+  --silver-base:    175 6% 62%;   /* #99a3a2 */
+  --silver-100:     175 6% 72%;   /* #b4bcbb */
+  --silver-200:     175 6% 82%;   /* #ced4d3 */
+  --silver-700:     175 6% 56%;   /* #8c9594 */
+  --silver-800:     175 6% 47%;   /* #757d7c */
+
+  /* Palette — primary action: patina teal */
+  --blue-base:      172 62% 39%;  /* #26a18f */
+  --blue-100:       172 62% 54%;  /* #46d2be */
+  --blue-900:       172 62% 28%;  /* #1b7365 */
+
+  /* Status palette — balanced earthy tones */
+  --green-base:     146 48% 46%;  /* #3cb06a */
+  --yellow-base:    40 100% 54%;  /* #ffb633 */
+  --red-base:       11 72% 57%;   /* #e16a44 */
+  --red-900:        11 72% 42%;   /* #b84c2a */
+  --panel-strong:   194 17% 15%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient — teal patina glow */
+  --body-gradient-start: rgba(38, 161, 143, 0.18);
+  --body-gradient-end-1: rgba(17, 24, 26, 0.99);
+  --body-gradient-end-2: rgba(8, 11, 12, 1);
+}
+
+[data-theme="verdigris"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(38, 161, 143, 0.18)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(17, 24, 26, 0.99)), var(--body-gradient-end-2, rgba(8, 11, 12, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: sepia                                                               */
+/* Warm archival-cinema theme with brass and sepia highlights.                */
+/* Applied via data-theme="sepia" on <html>.                                 */
+/* ========================================================================== */
+[data-theme="sepia"] {
+  /* Palette — warm projector darks */
+  --midnight-base:  24 24% 8%;    /* #1a1410 */
+  --midnight-100:   24 22% 12%;   /* #251d18 */
+  --midnight-200:   24 20% 16%;   /* #30261f */
+  --midnight-300:   24 18% 22%;   /* #423429 */
+  --midnight-400:   24 16% 28%;   /* #544235 */
+  --midnight-900:   24 28% 4%;    /* #0d0907 */
+
+  /* Palette — warm paper neutrals */
+  --silver-base:    34 12% 64%;   /* #b0a18f */
+  --silver-100:     34 14% 74%;   /* #c7baa9 */
+  --silver-200:     34 16% 84%;   /* #ded3c5 */
+  --silver-700:     34 10% 56%;   /* #9a8b7b */
+  --silver-800:     34 9% 47%;    /* #837568 */
+
+  /* Palette — primary action: brass sepia */
+  --blue-base:      37 51% 48%;   /* #b8893c */
+  --blue-100:       37 62% 60%;   /* #d8a757 */
+  --blue-900:       37 53% 34%;   /* #855f29 */
+
+  /* Status palette — earthy, still distinct */
+  --green-base:     118 28% 52%;  /* #6ea562 */
+  --yellow-base:    42 94% 58%;   /* #f8bc30 */
+  --red-base:       12 65% 58%;   /* #d97852 */
+  --red-900:        12 65% 43%;   /* #b15635 */
+  --panel-strong:   24 21% 14%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient — projector amber glow */
+  --body-gradient-start: rgba(184, 137, 60, 0.18);
+  --body-gradient-end-1: rgba(26, 20, 16, 0.99);
+  --body-gradient-end-2: rgba(13, 9, 7, 1);
+}
+
+[data-theme="sepia"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(184, 137, 60, 0.18)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(26, 20, 16, 0.99)), var(--body-gradient-end-2, rgba(13, 9, 7, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: ruby                                                                */
+/* Velvet theater dark theme with deep crimson highlights.                    */
+/* Applied via data-theme="ruby" on <html>.                                  */
+/* ========================================================================== */
+[data-theme="ruby"] {
+  --midnight-base:  345 24% 8%;   /* #1a1015 */
+  --midnight-100:   345 22% 12%;  /* #25171d */
+  --midnight-200:   345 20% 16%;  /* #301f26 */
+  --midnight-300:   345 18% 21%;  /* #402a33 */
+  --midnight-400:   345 16% 27%;  /* #513740 */
+  --midnight-900:   345 28% 4%;   /* #0d070a */
+
+  --silver-base:    340 10% 64%;  /* #ae97a0 */
+  --silver-100:     340 12% 74%;  /* #c8b1b9 */
+  --silver-200:     340 14% 84%;  /* #e1ccd2 */
+  --silver-700:     340 9% 56%;   /* #9a848d */
+  --silver-800:     340 8% 47%;   /* #816d75 */
+
+  --blue-base:      351 55% 50%;  /* #c43a4f */
+  --blue-100:       351 66% 62%;  /* #de5f74 */
+  --blue-900:       351 58% 36%;  /* #912536 */
+
+  --green-base:     145 42% 48%;
+  --yellow-base:    41 96% 58%;
+  --red-base:       5 70% 58%;
+  --red-900:        5 70% 42%;
+  --panel-strong:   345 21% 14%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  --body-gradient-start: rgba(196, 58, 79, 0.2);
+  --body-gradient-end-1: rgba(26, 16, 21, 0.99);
+  --body-gradient-end-2: rgba(13, 7, 10, 1);
+}
+
+[data-theme="ruby"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(196, 58, 79, 0.2)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(26, 16, 21, 0.99)), var(--body-gradient-end-2, rgba(13, 7, 10, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: liquid-glass                                                        */
+/* Cool translucent-cinema theme with icy highlights and glassy surfaces.     */
+/* Applied via data-theme="liquid-glass" on <html>.                           */
+/* ========================================================================== */
+[data-theme="liquid-glass"] {
+  --midnight-base:  206 38% 10%;   /* #101b23 */
+  --midnight-100:   206 34% 14%;   /* #182731 */
+  --midnight-200:   206 30% 19%;   /* #233543 */
+  --midnight-300:   206 24% 27%;   /* #35495b */
+  --midnight-400:   206 20% 36%;   /* #4b6377 */
+  --midnight-900:   206 42% 6%;    /* #081016 */
+
+  --silver-base:    198 18% 72%;   /* #a8bcc5 */
+  --silver-100:     198 20% 80%;   /* #bfd0d7 */
+  --silver-200:     198 22% 88%;   /* #d8e3e8 */
+  --silver-700:     198 15% 62%;   /* #8ea2aa */
+  --silver-800:     198 13% 52%;   /* #74878f */
+
+  --blue-base:      197 88% 72%;   /* #7dd9ff */
+  --blue-100:       197 95% 82%;   /* #a9e8ff */
+  --blue-900:       197 70% 54%;   /* #3abbe2 */
+
+  --green-base:     166 44% 58%;
+  --yellow-base:    45 100% 65%;
+  --red-base:       5 78% 66%;
+  --red-900:        5 78% 52%;
+  --panel-strong:   206 32% 17%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  --body-gradient-start: rgba(125, 217, 255, 0.22);
+  --body-gradient-end-1: rgba(16, 27, 35, 0.92);
+  --body-gradient-end-2: rgba(8, 16, 22, 0.98);
+}
+
+[data-theme="liquid-glass"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(125, 217, 255, 0.22)), transparent 32%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(16, 27, 35, 0.92)), var(--body-gradient-end-2, rgba(8, 16, 22, 0.98)));
+}
+
+/* ========================================================================== */
+/* Theme: rainbow                                                             */
+/* Saturated prism-inspired theme with vivid multi-hue accents.               */
+/* Applied via data-theme="rainbow" on <html>.                                */
+/* ========================================================================== */
+[data-theme="rainbow"] {
+  --midnight-base:  258 26% 10%;   /* #171226 */
+  --midnight-100:   258 24% 14%;   /* #211b2d */
+  --midnight-200:   258 22% 19%;   /* #2c2540 */
+  --midnight-300:   258 20% 26%;   /* #3b3450 */
+  --midnight-400:   258 18% 34%;   /* #4e4666 */
+  --midnight-900:   258 30% 6%;    /* #0d0914 */
+
+  --silver-base:    248 18% 73%;   /* #aea8ca */
+  --silver-100:     248 20% 81%;   /* #c7c2de */
+  --silver-200:     248 22% 89%;   /* #e0ddef */
+  --silver-700:     248 14% 63%;   /* #938db1 */
+  --silver-800:     248 12% 53%;   /* #787392 */
+
+  --blue-base:      328 89% 64%;   /* #f451a6 */
+  --blue-100:       281 92% 76%;   /* #d88aff */
+  --blue-900:       221 86% 63%;   /* #4f8ff2 */
+
+  --green-base:     144 70% 54%;
+  --yellow-base:    48 100% 62%;
+  --red-base:       354 100% 67%;
+  --red-900:        354 78% 50%;
+  --panel-strong:   258 23% 17%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  --body-gradient-start: rgba(244, 81, 166, 0.18);
+  --body-gradient-mid: rgba(96, 165, 250, 0.12);
+  --body-gradient-end-1: rgba(23, 18, 38, 0.98);
+  --body-gradient-end-2: rgba(13, 9, 20, 1);
+}
+
+[data-theme="rainbow"] body {
+  background-image:
+    radial-gradient(circle at top left, var(--body-gradient-start, rgba(244, 81, 166, 0.18)), transparent 28%),
+    radial-gradient(circle at top right, var(--body-gradient-mid, rgba(96, 165, 250, 0.12)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(23, 18, 38, 0.98)), var(--body-gradient-end-2, rgba(13, 9, 20, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: contrast                                                             */
+/* High-contrast black-and-white theme with sharp monochrome surfaces.         */
+/* Applied via data-theme="contrast" on <html>.                                */
+/* ========================================================================== */
+[data-theme="contrast"] {
+  /* Palette — pure monochrome */
+  --midnight-base:  0 0% 5%;    /* #0d0d0d */
+  --midnight-100:   0 0% 9%;    /* #171717 */
+  --midnight-200:   0 0% 14%;   /* #242424 */
+  --midnight-300:   0 0% 20%;   /* #333333 */
+  --midnight-400:   0 0% 28%;   /* #474747 */
+  --midnight-900:   0 0% 0%;    /* #000000 */
+
+  /* Palette — neutral grayscale */
+  --silver-base:    0 0% 68%;   /* #adadad */
+  --silver-100:     0 0% 78%;   /* #c7c7c7 */
+  --silver-200:     0 0% 88%;   /* #e0e0e0 */
+  --silver-700:     0 0% 58%;   /* #949494 */
+  --silver-800:     0 0% 48%;   /* #7a7a7a */
+
+  /* Palette — primary action: white */
+  --blue-base:      0 0% 100%;  /* #ffffff */
+  --blue-100:       0 0% 100%;  /* #ffffff */
+  --blue-900:       0 0% 82%;   /* #d1d1d1 */
+  --primary-foreground: 0 0% 5%; /* dark text on white primary */
+
+  /* Status palette — neutralized but distinct */
+  --green-base:     0 0% 85%;   /* #d9d9d9 */
+  --yellow-base:    0 0% 75%;   /* #bfbfbf */
+  --red-base:       0 0% 65%;   /* #a6a6a6 */
+  --red-900:        0 0% 52%;   /* #858585 */
+  --panel-strong:   0 0% 12%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient — subtle white glow on black */
+  --body-gradient-start: rgba(255, 255, 255, 0.08);
+  --body-gradient-end-1: rgba(13, 13, 13, 0.99);
+  --body-gradient-end-2: rgba(0, 0, 0, 1);
+}
+
+[data-theme="contrast"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(255, 255, 255, 0.08)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(13, 13, 13, 0.99)), var(--body-gradient-end-2, rgba(0, 0, 0, 1)));
+}
+
+/* ========================================================================== */
+/* Theme: ember                                                                 */
+/* Deep obsidian-charcoal with burnt amber/copper accent.                      */
+/* Applied via data-theme="ember" on <html>.                                   */
+/* ========================================================================== */
+[data-theme="ember"] {
+  /* Palette — obsidian (replaces midnight) */
+  --midnight-base:  20 20% 7%;    /* #140f0a */
+  --midnight-100:   20 18% 11%;   /* #1e1510 */
+  --midnight-200:   20 17% 16%;   /* #2a1e14 */
+  --midnight-300:   22 17% 21%;   /* #372719 */
+  --midnight-400:   22 16% 26%;   /* #43301e */
+  --midnight-900:   20 25% 4%;    /* #0a0604 */
+
+  /* Palette — silver (warm-tinted) */
+  --silver-base:    25 6% 62%;    /* #a39d99 */
+  --silver-100:     25 6% 72%;    /* #bbb6b3 */
+  --silver-200:     25 6% 82%;    /* #d4d0ce */
+  --silver-700:     25 6% 56%;    /* #948e8a */
+  --silver-800:     25 6% 47%;    /* #7c7672 */
+
+  /* Palette — primary action: burnt amber */
+  --blue-base:      28 85% 48%;   /* #e07012  */
+  --blue-100:       28 95% 60%;   /* #f8963a  */
+  --blue-900:       28 85% 34%;   /* #9e500d  */
+
+  /* Status palette — warmer tints */
+  --green-base:     145 48% 48%;  /* #3db870 */
+  --yellow-base:    38 100% 50%;  /* #ffa200 */
+  --red-base:       5 80% 56%;    /* #e8442a  */
+  --red-900:        5 80% 43%;    /* #c12d15  */
+  --panel-strong:   20 18% 14%;
+
+  --white:          0 0% 100%;
+  --black:          0 0% 0%;
+
+  /* Body gradient overrides */
+  --body-gradient-start: rgba(224, 112, 18, 0.16);
+  --body-gradient-end-1: rgba(20, 15, 10, 0.98);
+  --body-gradient-end-2: rgba(10, 6, 4, 1);
+}
+
+[data-theme="ember"] body {
+  background-image:
+    radial-gradient(circle at top, var(--body-gradient-start, rgba(224, 112, 18, 0.16)), transparent 30%),
+    linear-gradient(180deg, var(--body-gradient-end-1, rgba(20, 15, 10, 0.98)), var(--body-gradient-end-2, rgba(10, 6, 4, 1)));
+}
+
