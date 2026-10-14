@@ -52,6 +52,44 @@ jobs:
 
       - run: npm test
 
+      # Developer ID signing + notarization, once the Apple secrets exist (see README). Until then the
+      # build stays ad-hoc signed (tauri.conf.json signingIdentity "-"). Values only reach the build's
+      # environment when every secret is set, so a half-configured repo never produces a broken build.
+      - name: Apple signing and notarization
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          API_KEY: ${{ secrets.APPLE_API_KEY }}
+          API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          if [ -z "$CERTIFICATE" ] || [ -z "$CERTIFICATE_PASSWORD" ] || [ -z "$SIGNING_IDENTITY" ] \
+             || [ -z "$API_ISSUER" ] || [ -z "$API_KEY" ] || [ -z "$API_KEY_P8" ]; then
+            echo "::notice::Apple secrets not set; building ad-hoc signed (not notarized)."
+            exit 0
+          fi
+          # A pasted base64 certificate may have picked up line breaks.
+          CERTIFICATE="$(printf '%s' "$CERTIFICATE" | tr -d ' \r\n')"
+          key_path="$RUNNER_TEMP/AuthKey_$API_KEY.p8"
+          printf '%s\n' "$API_KEY_P8" > "$key_path"
+          {
+            echo "APPLE_CERTIFICATE=$CERTIFICATE"
+            echo "APPLE_CERTIFICATE_PASSWORD=$CERTIFICATE_PASSWORD"
+            echo "APPLE_SIGNING_IDENTITY=$SIGNING_IDENTITY"
+            echo "APPLE_API_ISSUER=$API_ISSUER"
+            echo "APPLE_API_KEY=$API_KEY"
+            echo "APPLE_API_KEY_PATH=$key_path"
+          } >> "$GITHUB_ENV"
+          # Replace the ad-hoc "-" identity in tauri.conf.json outright, rather than relying on precedence.
+          signing_conf="$RUNNER_TEMP/signing.conf.json"
+          SIGNING_IDENTITY="$SIGNING_IDENTITY" node -e \
+            'console.log(JSON.stringify({ bundle: { macOS: { signingIdentity: process.env.SIGNING_IDENTITY } } }))' > "$signing_conf"
+          echo "SIGNING_ARGS=--config $signing_conf" >> "$GITHUB_ENV"
+          echo "Signing as $SIGNING_IDENTITY and notarizing."
+
       # Bundled into the app via tauri.mediainfo.conf.json, so nobody has to install it.
       - name: Fetch MediaInfo
         shell: bash
@@ -96,7 +134,7 @@ jobs:
           # never points at a release that's missing files or latest.json.
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          args: ${{ matrix.args }} ${{ env.SIGNING_ARGS }}
 
   publish:
     needs: build

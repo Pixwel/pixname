@@ -86,6 +86,23 @@ The app finds it at the address set in Settings → Advanced, or else the one bu
 3. `.github/workflows/release.yml` builds a universal macOS `.dmg` and Windows `.exe`/`.msi`, then publishes them on the GitHub release
    together with signed updater bundles and `latest.json`. That file is the feed installed apps check for updates.
 
+### macOS signing and notarization
+
+Release builds are signed with a Developer ID and notarized when these repository secrets exist
+(Settings → Secrets and variables → Actions); without them the Mac build is ad-hoc signed and macOS
+asks people to approve it under Privacy & Security on first launch.
+
+| Secret | Value |
+|---|---|
+| `APPLE_CERTIFICATE` | The "Developer ID Application" certificate exported from Keychain as `.p12`, base64 (`base64 -i cert.p12 \| pbcopy`) |
+| `APPLE_CERTIFICATE_PASSWORD` | The `.p12` export password |
+| `APPLE_SIGNING_IDENTITY` | The certificate's name, e.g. `Developer ID Application: Pixwel Inc (ABCDE12345)` |
+| `APPLE_API_ISSUER` | App Store Connect → Users and Access → Integrations → Team Keys: the Issuer ID |
+| `APPLE_API_KEY` | That API key's Key ID (Developer access) |
+| `APPLE_API_KEY_P8` | The downloaded `AuthKey_<id>.p8` file's contents |
+
+Developer ID certificates last five years; App Store Connect keys don't expire until revoked.
+
 Updates are signed with the key in the `TAURI_SIGNING_PRIVATE_KEY` secret (password in `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`).
 The public key is in `tauri.conf.json`. Keep a backup of the private key: if it's lost, installed copies can't
 auto-update, and everyone has to reinstall a build signed with a new key.
