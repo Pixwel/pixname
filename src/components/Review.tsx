@@ -6,15 +6,32 @@ import { useProposals, type Row, type RowStatus } from "../useProposals";
 import { durationOf, formatDuration, tagsFromMediainfo } from "../lib/media";
 import { ItemEditor } from "./ItemEditor";
 import { countryOptions, languageOptions, parseExtra, tagOptions } from "./options";
+import type { Match, QueueItem } from "../lib/types";
 
 type Filter = "all" | "attention" | "ready";
 
 const renameable = (r: Row) => (r.status === "ready" || r.status === "warning") && !!r.proposal.name;
 
-function Confidence({ source, score }: { source?: string; score?: number }) {
-  if (!source) return null;
-  if (source === "fuzzy") return <span className="conf" title="Guessed from the file name — check it">{Math.round((score ?? 0) * 100)}%</span>;
-  return null;
+/** How a project/asset was matched, when it's worth a look: the rules, a remembered code, the team, or AI. */
+function Confidence({ match, item }: { match?: Match; item: QueueItem }) {
+  if (!match) return null;
+  const pct = `${Math.round(match.score * 100)}%`;
+  switch (match.source) {
+    case "fuzzy":
+      return <span className="conf" title="Guessed from the file name and folders — check it">{pct}</span>;
+    case "learned":
+      return <span className="conf code" title="From a vendor code the team has confirmed before">Code {pct}</span>;
+    case "team":
+      return (
+        <span className="conf team" title={item.team ? `Like "${item.team.example}", renamed by ${item.team.people} ${item.team.people === 1 ? "person" : "people"}` : "From the team's earlier renames"}>
+          Team {pct}
+        </span>
+      );
+    case "ai":
+      return <span className="conf ai" title={item.ai?.reason ?? "Suggested by AI — check it"}>AI {pct}</span>;
+    default:
+      return null;
+  }
 }
 
 function ItemRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle(): void }) {
@@ -48,11 +65,12 @@ function ItemRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle():
         <div className="ctx">
           <div>
             {project ? project.name : <span className="faint">No project</span>}
-            <Confidence {...item.project} />
+            <Confidence match={item.project} item={item} />
+            {item.aiPending && <span className="conf ai pending" title="Asking AI">AI…</span>}
           </div>
           <div className="muted">
             {asset ? asset.name : <span className="faint">No asset</span>}
-            <Confidence {...item.asset} />
+            <Confidence match={item.asset} item={item} />
           </div>
         </div>
         <div className="tech mono">
@@ -67,6 +85,8 @@ function ItemRow({ row, open, onToggle }: { row: Row; open: boolean; onToggle():
 
 function BulkBar({ rows }: { rows: Row[] }) {
   const catalog = useStore((s) => s.catalog);
+  const askAi = useStore((s) => s.askAi);
+  const aiReady = useStore((s) => s.service.status === "ready" && s.service.health.ai);
   const setOverrides = useStore((s) => s.setOverrides);
   const setAsset = useStore((s) => s.setAsset);
   const removeItems = useStore((s) => s.removeItems);
@@ -137,6 +157,16 @@ function BulkBar({ rows }: { rows: Row[] }) {
         }}
       />
       <span className="spacer" />
+      {aiReady && (
+        <button
+          className="btn small"
+          title="Ask AI to match these files, even ones the rules already placed"
+          disabled={rows.every((r) => r.item.aiPending)}
+          onClick={() => askAi(ids, true)}
+        >
+          {rows.some((r) => r.item.aiPending) ? "Asking AI…" : "Ask AI"}
+        </button>
+      )}
       <button className="btn small" onClick={() => removeItems(ids)}>Remove from list</button>
     </div>
   );

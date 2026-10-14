@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use walkdir::WalkDir;
 
 const JOURNAL_FILE: &str = "rename-journal.json";
+/// Written by tauri-plugin-log into the app log folder (~/Library/Logs/com.pixwel.pixname on macOS).
+const LOG_FILE: &str = "pixname";
 
 /// Proxy GET requests to the Pixwel API from Rust so the webview never deals with CORS.
 #[tauri::command]
@@ -27,15 +29,64 @@ async fn api_get(
         .header("User-Agent", "pixname")
         .send()
         .await
-        .map_err(|e| format!("Request to {url} failed: {e}"))?;
+        .map_err(|e| {
+            log::warn!("GET {url} failed: {e}");
+            format!("Request to {url} failed: {e}")
+        })?;
 
     let status = response.status();
     let body = response.text().await.map_err(|e| e.to_string())?;
     if !status.is_success() {
         let snippet: String = body.chars().take(300).collect();
+        log::warn!("GET {url} -> {status}: {snippet}");
         return Err(format!("{status} from {path}: {snippet}"));
     }
     serde_json::from_str(&body).map_err(|e| format!("Invalid JSON from {path}: {e}"))
+}
+
+/// Call the Pixname service (shared codes, team memory, AI matching) with the user's Pixwel token.
+/// Like `api_get`, from Rust so the webview doesn't need CORS on the service.
+#[tauri::command]
+async fn service_request(
+    base_url: String,
+    path: String,
+    method: String,
+    token: String,
+    environment: String,
+    body: Option<Value>,
+) -> Result<Value, String> {
+    if !(base_url.starts_with("https://") || base_url.starts_with("http://")) {
+        return Err("The service URL must start with https://".into());
+    }
+    let url = format!("{}/{}", base_url.trim_end_matches('/'), path.trim_start_matches('/'));
+    let method = reqwest::Method::from_bytes(method.to_uppercase().as_bytes()).map_err(|e| e.to_string())?;
+    let mut request = reqwest::Client::new()
+        .request(method.clone(), &url)
+        .bearer_auth(token.trim())
+        .header("X-Pixwel-Env", environment)
+        .header("Accept", "application/json")
+        .header("User-Agent", "pixname")
+        .timeout(std::time::Duration::from_secs(150));
+    if let Some(body) = body {
+        request = request.json(&body);
+    }
+    let response = request.send().await.map_err(|e| {
+        log::warn!("{method} {url} failed: {e}");
+        format!("Couldn't reach the Pixname service: {e}")
+    })?;
+    let status = response.status();
+    let text = response.text().await.map_err(|e| e.to_string())?;
+    let value: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
+    if !status.is_success() {
+        let message = value
+            .get("error")
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .unwrap_or_else(|| text.chars().take(300).collect());
+        log::warn!("{method} {url} -> {status}: {message}");
+        return Err(format!("{status}: {message}"));
+    }
+    Ok(value)
 }
 
 #[derive(Serialize)]
@@ -224,6 +275,9 @@ async fn probe_file(path: String, ffprobe: Option<String>, mediainfo: Option<Str
     if let Ok(size) = imagesize::size(&path) {
         probe.image = Some((size.width, size.height));
     }
+    for e in &probe.errors {
+        log::warn!("Probing \"{path}\": {e}");
+    }
     probe
 }
 
@@ -309,6 +363,12 @@ fn rename_files(app: tauri::AppHandle, ops: Vec<RenameOp>) -> Result<Vec<RenameR
             }),
         }
     }
+    for r in &results {
+        match &r.error {
+            None => log::info!("Renamed \"{}\" -> \"{}\"", r.from, r.to),
+            Some(e) => log::warn!("Rename failed \"{}\" -> \"{}\": {e}", r.from, r.to),
+        }
+    }
     if !done.is_empty() {
         let json = serde_json::to_string_pretty(&done).map_err(|e| e.to_string())?;
         std::fs::write(journal_path(&app)?, json).map_err(|e| e.to_string())?;
@@ -327,6 +387,10 @@ fn undo_last_rename(app: tauri::AppHandle) -> Result<Vec<RenameResult>, String> 
         .rev()
         .map(|op| {
             let res = rename_one(Path::new(&op.to), Path::new(&op.from));
+            match &res {
+                Ok(()) => log::info!("Undo: renamed \"{}\" -> \"{}\"", op.to, op.from),
+                Err(e) => log::warn!("Undo failed \"{}\" -> \"{}\": {e}", op.to, op.from),
+            }
             RenameResult {
                 from: op.to,
                 to: op.from,
@@ -339,16 +403,47 @@ fn undo_last_rename(app: tauri::AppHandle) -> Result<Vec<RenameResult>, String> 
     Ok(results)
 }
 
+#[derive(Serialize)]
+struct LogTail {
+    path: String,
+    text: String,
+}
+
+fn log_file(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
+    Ok(dir.join(format!("{LOG_FILE}.log")))
+}
+
+/// The last `max_lines` lines of the log, for the in-app viewer.
+#[tauri::command]
+fn read_log(app: tauri::AppHandle, max_lines: Option<usize>) -> Result<LogTail, String> {
+    let path = log_file(&app)?;
+    let text = std::fs::read_to_string(&path).unwrap_or_default();
+    let lines: Vec<&str> = text.lines().collect();
+    let keep = max_lines.unwrap_or(2000).min(lines.len());
+    Ok(LogTail {
+        path: path.to_string_lossy().into_owned(),
+        text: lines[lines.len() - keep..].join("\n"),
+    })
+}
+
+#[tauri::command]
+fn clear_log(app: tauri::AppHandle) -> Result<(), String> {
+    std::fs::write(log_file(&app)?, "").map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn has_undo(app: tauri::AppHandle) -> bool {
     journal_path(&app).map(|p| p.is_file()).unwrap_or(false)
 }
 
-/// The default macOS menu's About box shows the bundle's icon, which an unbundled dev build lacks
-/// (it shows a generic one). Replace that item with one that carries the app icon explicitly.
+/// The default menu, with two changes:
+/// - macOS's About box shows the bundle's icon, which an unbundled dev build lacks (it shows a
+///   generic one), so that item is replaced with one that carries the app icon explicitly.
+/// - Help → Show Log opens the in-app log viewer (the webview listens for "show-log").
 #[cfg(target_os = "macos")]
-fn set_about_icon(app: &tauri::App) -> tauri::Result<()> {
-    use tauri::menu::{AboutMetadata, Menu, MenuItemKind, PredefinedMenuItem};
+fn build_menu(app: &tauri::App) -> tauri::Result<()> {
+    use tauri::menu::{AboutMetadata, Menu, MenuItem, MenuItemKind, PredefinedMenuItem};
 
     let handle = app.handle();
     let menu = Menu::default(handle)?;
@@ -371,6 +466,9 @@ fn set_about_icon(app: &tauri::App) -> tauri::Result<()> {
         app_menu.remove_at(0)?;
         app_menu.insert(&about, 0)?;
     }
+    if let Some(MenuItemKind::Submenu(help)) = menu.items()?.into_iter().last() {
+        help.append(&MenuItem::with_id(handle, "show-log", "Show Log", true, None::<&str>)?)?;
+    }
     app.set_menu(menu)?;
     Ok(())
 }
@@ -382,22 +480,50 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+                        file_name: Some(LOG_FILE.into()),
+                    }),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                ])
+                .level(log::LevelFilter::Info)
+                // Keep it small enough to read and to paste into a bug report.
+                .max_file_size(2_000_000)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+                .build(),
+        )
+        .on_menu_event(|app, event| {
+            if event.id() == "show-log" {
+                let _ = app.emit("show-log", ());
+            }
+        })
         .setup(|app| {
+            log::info!(
+                "Pixname {} starting on {} {}",
+                app.package_info().version,
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            );
             #[cfg(desktop)]
             app.handle()
                 .plugin(tauri_plugin_updater::Builder::new().build())?;
             #[cfg(target_os = "macos")]
-            set_about_icon(app)?;
+            build_menu(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             api_get,
+            service_request,
             tool_status,
             expand_paths,
             probe_file,
             rename_files,
             undo_last_rename,
-            has_undo
+            has_undo,
+            read_log,
+            clear_log
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

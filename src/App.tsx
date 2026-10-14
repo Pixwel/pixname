@@ -8,6 +8,8 @@ import { UpdateBanner } from "./components/UpdateBanner";
 import { PixwelLogo } from "./components/PixwelLogo";
 import { Splash } from "./components/Splash";
 import { ThemePicker } from "./components/ThemePicker";
+import { LogViewer } from "./components/LogViewer";
+import { listen } from "@tauri-apps/api/event";
 import "./styles.css";
 
 function DragBanner() {
@@ -31,6 +33,7 @@ function Main() {
   const loaded = useStore((s) => s.settingsLoaded);
   const settings = useStore((s) => s.settings);
   const settingsOpen = useStore((s) => s.settingsOpen);
+  const logOpen = useStore((s) => s.logOpen);
   const openSettings = useStore((s) => s.openSettings);
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
@@ -41,6 +44,15 @@ function Main() {
 
   useEffect(() => {
     init();
+  }, []);
+
+  // Help → Show Log (macOS menu).
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    const stop = listen("show-log", () => useStore.getState().openLog(true));
+    return () => {
+      stop.then((unlisten) => unlisten());
+    };
   }, []);
 
   // Esc backs out one level: review -> projects -> start screen.
@@ -82,11 +94,12 @@ function Main() {
         {catalogWarnings.length > 0 && (
           <span className="tool-pill missing" title={catalogWarnings.join("\n")}>Using bundled reference data</span>
         )}
-        <span className={`tool-pill ${probeTool ? "" : "missing"}`} title={[tools.mediainfo, tools.ffprobe].filter(Boolean).join("\n")}>
-          {probeTool
-            ? `Reading media with ${probeTool}${probeTool === "mediainfo" && tools.mediainfoBundled ? " (built in)" : ""}`
-            : "ffprobe not found — names only"}
-        </span>
+        {/* Which tool reads media is in Settings → Advanced; only its absence is worth showing here. */}
+        {!probeTool && (
+          <span className="tool-pill missing" title="Install mediainfo or ffprobe, or set a path in Settings → Advanced">
+            No media reader — names only
+          </span>
+        )}
         {view === "browse" ? (
           <button className="btn" onClick={() => setView("review")}>Review{itemCount ? ` (${itemCount})` : ""}</button>
         ) : null}
@@ -97,6 +110,7 @@ function Main() {
       <DragBanner />
       <UpdateBanner />
       {settingsOpen && <SettingsDialog />}
+      {logOpen && <LogViewer />}
     </div>
   );
 }

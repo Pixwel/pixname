@@ -106,3 +106,29 @@ export function chooseProject(
   const clearlyNewer = others.every((o) => age(newest) - age(o) >= RECENCY_GAP_SECONDS);
   return newest.score >= PROJECT_THRESHOLD && age(newest) > 0 && clearlyNewer ? newest : undefined;
 }
+
+/** Two independent clues about the same project (noisy-OR). */
+export const combine = (a: number, b: number) => 1 - (1 - a) * (1 - b);
+
+interface CodeVotes {
+  projectId: string;
+  votes: number;
+  people: number;
+}
+
+/**
+ * How strongly a remembered vendor code points at each project. A code used for one project by
+ * several people is strong; one person's single rename is a hint; a vendor's own code that turns up
+ * across projects ("FH") splits its weight. Local remembered codes count as one person's vote.
+ */
+export function codeStrengths(local: string | undefined, shared: CodeVotes[] = []): Map<string, number> {
+  const all = [...shared];
+  if (local && !all.some((c) => c.projectId === local)) all.push({ projectId: local, votes: 1, people: 1 });
+  const total = all.reduce((n, c) => n + c.votes, 0);
+  const strengths = new Map<string, number>();
+  for (const c of all) strengths.set(c.projectId, 0.95 * (c.votes / total) * (1 - 0.5 ** c.people));
+  return strengths;
+}
+
+/** Team memory: how much an earlier, similar file's resolution counts. */
+export const teamStrength = (t: { similarity: number; people: number }) => t.similarity * (1 - 0.5 ** (t.people + 1));

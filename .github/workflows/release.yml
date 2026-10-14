@@ -63,6 +63,9 @@ jobs:
           # Signs the updater bundles; the app only installs updates signed with this key.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # The Pixname service this build uses unless someone sets another in Settings.
+          # Set it under Settings → Secrets and variables → Actions → Variables.
+          VITE_PIXNAME_SERVICE_URL: ${{ vars.PIXNAME_SERVICE_URL }}
         with:
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}
           releaseName: Pixname ${{ github.ref_type == 'tag' && github.ref_name || 'v__VERSION__' }}

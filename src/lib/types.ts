@@ -110,12 +110,18 @@ export interface FileEntry {
   relDirs: string[];
 }
 
-export type MatchSource = "drop" | "prefix" | "learned" | "fuzzy" | "manual";
+/**
+ * How a project/asset was chosen: dropped onto it, the file's own project prefix, a remembered
+ * vendor code, the rules (fuzzy), the team's earlier renames, AI, or by hand.
+ */
+export type MatchSource = "drop" | "prefix" | "learned" | "fuzzy" | "team" | "ai" | "manual";
 
 export interface Match {
   id: string;
   source: MatchSource;
   score: number; // 0..1
+  /** A person accepted this suggestion; matching won't replace it. */
+  accepted?: boolean;
 }
 
 /** What the user has explicitly set on a row; these win over everything detected. */
@@ -144,4 +150,11 @@ export interface QueueItem {
   asset?: Match;
   overrides: Overrides;
   selected: boolean;
+  /** Pixname's own latest suggestion, kept so a rename can report whether it was right. */
+  guess?: { project?: Match; asset?: Match };
+  /** How the team resolved the most similar earlier file (Pixname service). */
+  team?: { projectId: string; assetId: string | null; similarity: number; votes: number; people: number; example: string } | null;
+  /** The AI's suggestion and why (Pixname service). */
+  ai?: { projectId: string | null; assetId: string | null; confidence: number; reason: string };
+  aiPending?: boolean;
 }

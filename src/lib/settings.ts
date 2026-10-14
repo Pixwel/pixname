@@ -8,6 +8,10 @@ export interface Settings {
   token: string;
   ffprobePath: string;
   mediainfoPath: string;
+  /** The Pixname service (shared codes, team memory, AI matching); empty = work alone. */
+  serviceUrl: string;
+  /** Ask the service's AI about files the rules and team memory can't place. */
+  aiMatching: boolean;
 }
 
 export const ENVIRONMENT_URLS: Record<Exclude<Environment, "custom">, string> = {
@@ -21,7 +25,18 @@ export const DEFAULT_SETTINGS: Settings = {
   token: "",
   ffprobePath: "",
   mediainfoPath: "",
+  serviceUrl: "",
+  aiMatching: true,
 };
+
+/**
+ * The Pixname service built into this copy of the app: VITE_PIXNAME_SERVICE_URL at build time
+ * (.env.local for development, a GitHub Actions variable for releases).
+ */
+export const BUILT_IN_SERVICE_URL: string = (import.meta.env.VITE_PIXNAME_SERVICE_URL ?? "").trim();
+
+/** The service in use: an address set in Settings wins; blank means the built-in one. */
+export const serviceUrlOf = (settings: Settings) => settings.serviceUrl.trim() || BUILT_IN_SERVICE_URL;
 
 export function baseUrl(settings: Settings): string {
   return settings.environment === "custom"

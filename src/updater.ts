@@ -1,3 +1,4 @@
+import { log } from "./log";
 import { create } from "zustand";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -31,9 +32,13 @@ export const useUpdater = create<UpdaterState>((set, get) => ({
     set({ checking: true, ...(manual ? { message: undefined } : {}) });
     try {
       const update = await check();
-      if (update) set({ update, message: `Pixname ${update.version} is available.` });
+      if (update) {
+        log.info(`Update ${update.version} available`);
+        set({ update, message: `Pixname ${update.version} is available.` });
+      }
       else if (manual) set({ message: `You're up to date (${get().version ?? "current version"}).` });
     } catch (e) {
+      log.warn(`Update check failed: ${e}`);
       // Background checks fail quietly (offline, feed unavailable); manual ones say why.
       if (manual) set({ message: `Couldn't check for updates: ${e}` });
     } finally {
@@ -57,6 +62,7 @@ export const useUpdater = create<UpdaterState>((set, get) => ({
       });
       await relaunch();
     } catch (e) {
+      log.error(`Update install failed: ${e}`);
       set({ progress: null, error: String(e) });
     }
   },

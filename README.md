@@ -71,6 +71,14 @@ MediaInfo's version and checksums are pinned in `scripts/fetch-mediainfo.sh`; bu
 - `src/lib/fuzzy.ts`: project/asset ranking and folder hints
 - `src/data/`: platform fixtures, used when the API can't provide tags/types/territories/languages
 
+## Pixname service
+
+The optional service in [`service/`](service/README.md) adds shared vendor codes, team memory and AI matching.
+The app finds it at the address set in Settings → Advanced, or else the one built in at compile time:
+
+- Development: `VITE_PIXNAME_SERVICE_URL` in `.env.local` (see `.env.example`), e.g. `http://localhost:3000`.
+- Releases: the `PIXNAME_SERVICE_URL` GitHub Actions variable (repo Settings → Secrets and variables → Actions → Variables).
+
 ## Releasing
 
 1. Bump `version` in `src-tauri/tauri.conf.json` (and `package.json` / `src-tauri/Cargo.toml` to match).

@@ -206,6 +206,7 @@ export function ItemEditor({ row }: { row: Row }) {
           <span className="faint">{item.file.dir}</span>
         </div>
       </div>
+      <Hints row={row} />
       {(proposal.warnings.length || proposal.notes.length || item.probe?.errors.length || proposal.error) && (
         <div className="f full msgs">
           {proposal.error && <div className="msg err">{proposal.error}</div>}
@@ -218,6 +219,62 @@ export function ItemEditor({ row }: { row: Row }) {
           {item.probe?.errors.map((e) => (
             <div key={e} className="msg note">{e}</div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** What the team's earlier renames and the AI suggest for this file, with a way to use it. */
+function Hints({ row }: { row: Row }) {
+  const { item } = row;
+  const acceptSuggestion = useStore((s) => s.acceptSuggestion);
+  const projects = useStore((s) => s.projects);
+  const assetsByProject = useStore((s) => s.assets);
+  const ensureAssets = useStore((s) => s.ensureAssets);
+  const projectName = (id: string | null) =>
+    (id && projects.status === "ready" && projects.data.find((p) => p._id === id)?.name) || "no project";
+  const assetName = (projectId: string | null, assetId: string | null) => {
+    const list = projectId ? assetsByProject[projectId] : undefined;
+    return (assetId && list?.status === "ready" && list.data.find((a) => a._id === assetId)?.name) || (assetId ? "an asset" : "no asset");
+  };
+  useEffect(() => {
+    for (const id of [item.ai?.projectId, item.team?.projectId]) if (id) ensureAssets(id);
+  }, [item.ai?.projectId, item.team?.projectId]);
+
+  const current = (projectId: string | null, assetId: string | null) =>
+    item.project?.id === projectId && (item.asset?.id ?? null) === assetId;
+  const { team, ai } = item;
+  if (!team && !ai) return null;
+
+  return (
+    <div className="f full hints">
+      {team && (
+        <div className="hint-row">
+          <span className="conf team">Team</span>
+          <span>
+            {projectName(team.projectId)} / {assetName(team.projectId, team.assetId)}
+            <span className="muted">
+              {" "}
+              — like <span className="mono">{team.example}</span> ({Math.round(team.similarity * 100)}% alike, {team.people}{" "}
+              {team.people === 1 ? "person" : "people"})
+            </span>
+          </span>
+          {!current(team.projectId, team.assetId) && (
+            <button className="btn small" onClick={() => acceptSuggestion(item.id, "team")}>Use this</button>
+          )}
+        </div>
+      )}
+      {ai && (
+        <div className="hint-row">
+          <span className="conf ai">AI {Math.round(ai.confidence * 100)}%</span>
+          <span>
+            {ai.projectId ? `${projectName(ai.projectId)} / ${assetName(ai.projectId, ai.assetId)}` : "No suggestion"}
+            <span className="muted"> — {ai.reason}</span>
+          </span>
+          {ai.projectId && !current(ai.projectId, ai.assetId) && (
+            <button className="btn small" onClick={() => acceptSuggestion(item.id, "ai")}>Use this</button>
+          )}
         </div>
       )}
     </div>

@@ -33,7 +33,7 @@ const probe = {
 
 export function installBrowserMock() {
   mockWindows("main");
-  const store = new Map<string, unknown>([["settings", { environment: "staging", token: "pat_dev", customUrl: "", ffprobePath: "", mediainfoPath: "" }]]);
+  const store = new Map<string, unknown>([["settings", { environment: "staging", token: "pat_dev", customUrl: "", ffprobePath: "", mediainfoPath: "", serviceUrl: "https://pixname-dev.example", aiMatching: true }]]);
   mockIPC(
     (cmd, args: any) => {
       switch (cmd) {
@@ -50,6 +50,45 @@ export function installBrowserMock() {
           return "dev";
         case "has_undo":
           return false;
+        // A pretend Pixname service: one shared code, team memory for "Tug of War", AI for the rest.
+        case "service_request": {
+          const { path, body } = args as { path: string; body: any };
+          if (path === "api/health") return { ok: true, env: "staging", ai: true, model: "claude-sonnet-5-5 via Anthropic API" };
+          if (path === "api/codes") return { codes: { STF: [{ projectId: "p3", votes: 4, people: 2, updatedAt: 0 }] } };
+          if (path === "api/resolutions/lookup")
+            return {
+              matches: (body.names as string[]).map((name) =>
+                /tug of war/i.test(name)
+                  ? { name, projectId: "p1", assetId: "a7", similarity: 0.83, votes: 3, people: 2, example: "0080_Tug of War_Green Box.mov" }
+                  : null,
+              ),
+            };
+          if (path === "api/match")
+            return {
+              matches: (body.files as { name: string }[]).map((f, file) =>
+                /chun/i.test(f.name)
+                  ? { file, projectId: "p3", assetId: "a5", confidence: 0.82, reason: "'Chun Li vert' matches the vertical Chun Li asset (30s)." }
+                  : { file, projectId: null, assetId: null, confidence: 0.2, reason: "Nothing in the lists fits this name." },
+              ),
+            };
+          return { ok: true };
+        }
+        case "read_log":
+          return {
+            path: "/Users/you/Library/Logs/com.pixwel.pixname/pixname.log",
+            text: [
+              "[2026-10-13][19:40:01][pixname_lib][INFO] Pixname 0.2.6 starting on macos aarch64",
+              "[2026-10-13][19:40:02][webview][INFO] Loaded 4 projects from staging",
+              "[2026-10-13][19:40:09][webview][INFO] Added 3 file(s) from 1 path(s)",
+              "[2026-10-13][19:40:10][webview][INFO] Matched \"0080_Tug of War_Green Box.mov\" -> Children of Blood and Bone (fuzzy 86%) / Tug of War (fuzzy 95%)",
+              "[2026-10-13][19:40:10][webview][INFO] No confident project for \"FH_Promo_Final.mov\" (folders: none)",
+              "[2026-10-13][19:40:11][pixname_lib][WARN] Probing \"/x/broken.mov\": mediainfo: exited with status 1",
+              "[2026-10-13][19:41:30][pixname_lib][INFO] Renamed \"/x/0080_Tug of War_Green Box.mov\" -> \"/x/COBAB_SOCIAL_TUG-OF-WAR_ENG_TXTD_GREEN-BOX_PRORES_1920p2398.mov\"",
+              "[2026-10-13][19:40:12][pixname_lib][WARN] GET https://api-staging.pixwel.com/api/assets -> 500 Internal Server Error: {}",
+            ].join("\n"),
+          };
+        case "clear_log":
+          return null;
         case "tool_status":
           return { ffprobe: "/opt/homebrew/bin/ffprobe", mediainfo: null };
         case "api_get":
@@ -82,4 +121,5 @@ export function installBrowserMock() {
     const { useStore } = await import("../store");
     return useStore.getState().addPaths(paths, {});
   };
+  (window as any).__pixnameStore = async () => (await import("../store")).useStore;
 }

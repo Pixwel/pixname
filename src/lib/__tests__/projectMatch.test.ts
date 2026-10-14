@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_CATALOG as catalog } from "../api";
-import { assetEvidence, chooseProject, nameScores, searchQueries } from "../projectMatch";
+import { assetEvidence, chooseProject, codeStrengths, combine, nameScores, PROJECT_THRESHOLD, searchQueries, teamStrength } from "../projectMatch";
 import { rankAssets } from "../fuzzy";
 import type { Asset, Project } from "../types";
 
@@ -114,3 +114,23 @@ describe("project matching from vendor codes and asset evidence", () => {
   });
 });
 
+
+describe("remembered codes and team memory as clues", () => {
+  it("weighs a code by consistency and how many people confirmed it", () => {
+    const one = codeStrengths("sf");
+    const team = codeStrengths(undefined, [{ projectId: "sf", votes: 6, people: 3 }]);
+    const vendor = codeStrengths(undefined, [
+      { projectId: "dino", votes: 3, people: 2 },
+      { projectId: "other", votes: 3, people: 2 },
+    ]);
+    expect(one.get("sf")!).toBeLessThan(PROJECT_THRESHOLD); // one rename is only a hint
+    expect(team.get("sf")!).toBeGreaterThan(0.8);
+    expect(vendor.get("dino")!).toBeLessThan(0.4); // a vendor's own code stays weak
+  });
+
+  it("lets a strong clue win and leaves weak ones as tie-breakers", () => {
+    expect(combine(0.5, 0.5)).toBeCloseTo(0.75);
+    expect(teamStrength({ similarity: 1, people: 1 })).toBeCloseTo(0.75);
+    expect(teamStrength({ similarity: 0.6, people: 1 })).toBeLessThan(PROJECT_THRESHOLD);
+  });
+});

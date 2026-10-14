@@ -12,6 +12,8 @@ export default defineConfig(() => ({
   resolve: {
     alias: { path: fileURLToPath(new URL("./src/shims/path.ts", import.meta.url)) },
   },
+  // The Vercel service in service/ has its own tests and dependencies.
+  test: { include: ["src/**/*.test.ts"] },
   build: {
     // A desktop app loads from disk; one chunk is fine.
     chunkSizeWarningLimit: 1500,
@@ -35,7 +37,7 @@ export default defineConfig(() => ({
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ["**/src-tauri/**", "**/service/**"],
     },
   },
 }));

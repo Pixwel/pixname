@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useStore } from "./store";
 import { distinguishingExtras } from "./lib/collisions";
 import { propose, type Proposal, type ProposeContext } from "./lib/propose";
-import type { QueueItem } from "./lib/types";
+import type { Match, QueueItem } from "./lib/types";
 
 export type RowStatus = "probing" | "ready" | "unchanged" | "warning" | "error";
 
@@ -12,11 +12,15 @@ export interface Row {
   status: RowStatus;
 }
 
+/** Matches a person should look at before renaming. */
+const unsure = (m?: Match) =>
+  !!m && !m.accepted && (m.source === "fuzzy" || m.source === "ai" || ((m.source === "team" || m.source === "learned") && m.score < 0.85));
+
 export function statusOf(item: QueueItem, proposal: Proposal): RowStatus {
   if (item.probing) return "probing";
   if (proposal.error) return "error";
   if (proposal.unchanged) return "unchanged";
-  if (proposal.warnings.length || item.asset?.source === "fuzzy" || item.project?.source === "fuzzy") return "warning";
+  if (proposal.warnings.length || unsure(item.project) || unsure(item.asset)) return "warning";
   return "ready";
 }
 
