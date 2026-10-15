@@ -49,6 +49,18 @@ const SCHEMA = [
      created_at INTEGER NOT NULL,
      UNIQUE (env, phrase)
    )`,
+  // Assets the team expects but Pixwel doesn't have yet, pasted from delivery docs (see lib/expected.ts).
+  `CREATE TABLE IF NOT EXISTS expected_assets (
+     env TEXT NOT NULL,
+     project_id TEXT NOT NULL,
+     slug TEXT NOT NULL,
+     name TEXT NOT NULL,
+     type TEXT NOT NULL,
+     added_by TEXT NOT NULL,
+     added_by_name TEXT NOT NULL DEFAULT '',
+     added_at INTEGER NOT NULL,
+     PRIMARY KEY (env, project_id, slug)
+   )`,
 ];
 
 /** Columns added after the first release; added to existing databases on startup. */

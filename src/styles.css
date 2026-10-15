@@ -127,6 +127,16 @@ label.check { display: inline-flex; align-items: center; gap: 6px; cursor: point
 .asset-row:hover { background: var(--panel); border-color: var(--line-strong); }
 .asset-row .title { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .asset-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asset-row.expected { border-color: var(--line); }
+.expected-tag {
+  display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; padding: 0 2px 0 7px; border-radius: 99px;
+  font-size: 10px; font-weight: 600; background: var(--panel-2); color: var(--muted); vertical-align: 1px;
+}
+.expected-tag .forget {
+  border: 0; background: transparent; color: var(--faint); cursor: pointer; font-size: 10px; line-height: 1; padding: 2px 4px; border-radius: 99px;
+}
+.expected-tag .forget:hover { color: var(--error); }
+.dialog textarea.paste { resize: vertical; min-height: 140px; font-family: var(--mono); font-size: 12px; line-height: 1.5; }
 .count-badge {
   display: inline-block; min-width: 20px; padding: 1px 7px; border-radius: 99px; background: var(--accent); color: var(--accent-text);
   font-size: 11px; font-weight: 600; text-align: center;

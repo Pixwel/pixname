@@ -31,6 +31,9 @@ const probe = {
   },
 };
 
+/** The pretend service's shared expected-asset lists. */
+let mockExpected: { projectId: string; slug: string; name: string; type: string; addedBy: string; at: number }[] = [];
+
 export function installBrowserMock() {
   mockWindows("main");
   const store = new Map<string, unknown>([["settings", { environment: "staging", token: "pat_dev", customUrl: "", ffprobePath: "", mediainfoPath: "", serviceUrl: "https://pixname-dev.example", aiMatching: true }]]);
@@ -55,6 +58,25 @@ export function installBrowserMock() {
           const { path, body } = args as { path: string; body: any };
           if (path === "api/health")
             return { ok: true, env: "staging", ai: true, model: "claude-sonnet-5-5 via Anthropic API", user: { id: "u1", name: "Jeff Loiselle", isAdmin: true } };
+          if (path.startsWith("api/expected")) {
+            const { method } = args as { method: string };
+            if (method === "POST") {
+              const slug = (n: string) => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+              let added = 0;
+              for (const name of body.names as string[]) {
+                if (mockExpected.some((a) => a.projectId === body.projectId && a.slug === slug(name))) continue;
+                mockExpected.push({ projectId: body.projectId, slug: slug(name), name, type: body.type, addedBy: "Jeff Loiselle", at: 1792000000 });
+                added++;
+              }
+              return { added };
+            }
+            if (method === "DELETE") {
+              const q = new URLSearchParams(path.split("?")[1]);
+              mockExpected = mockExpected.filter((a) => a.projectId !== q.get("projectId") || (q.get("slug") && a.slug !== q.get("slug")));
+              return { ok: true };
+            }
+            return { assets: mockExpected };
+          }
           if (path === "api/rules")
             return { rules: [{ id: 1, phrase: "chun li vert", words: ["chun", "li", "vert"], projectId: "p3", assetId: "a5", createdBy: "Jeff Loiselle", at: 1791900000 }] };
           if (path.startsWith("api/rules/suggestions"))

@@ -2,11 +2,12 @@ import { createClient } from "@libsql/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { database, useDatabase } from "@/lib/db";
 import { addVotes, editCode, forgetCode, isVendorCode, listCodes, VoteRequest } from "@/lib/codes";
-import { buildPrompt, MatchRequest, validate, type Asset, type Project } from "@/lib/match";
+import { buildPrompt, expectedOf, MatchRequest, validate, type Asset, type Project } from "@/lib/match";
 import type { Caller } from "@/lib/pixwel";
 import { aiAvailable, modelConfig } from "@/lib/model";
 import { history, insights, lookup, nameKey, recordResolutions, seen, stats, undoRenames } from "@/lib/resolutions";
 import { addRule, deleteRule, listRules, suggestions } from "@/lib/rules";
+import { addExpected, listExpected, removeExpected } from "@/lib/expected";
 import { isAdminSession } from "@/lib/pixwel";
 import * as codesRoute from "@/app/api/codes/route";
 
@@ -133,6 +134,23 @@ describe("AI matching", () => {
     expect(matches[0]).toMatchObject({ projectId: "dino", assetId: "tug", confidence: 1 });
     expect(matches[1]).toMatchObject({ projectId: null, assetId: null, confidence: 0 });
     expect(matches).toHaveLength(2);
+  });
+
+  it("adds expected assets of candidate projects, unless Pixwel has one by that name", () => {
+    const withExpected = MatchRequest.parse({
+      ...request,
+      expectedAssets: [
+        { id: "expected:sf:world-premiere-callina-liang", name: "World Premiere - Callina Liang", type: "special-events", project: "sf" },
+        { id: "expected:sf:in-theater-etiquette", name: "In Theater Etiquette", type: "social", project: "sf" },
+        { id: "expected:other:x", name: "Elsewhere", type: "social", project: "other" },
+      ],
+    });
+    const extra = expectedOf(withExpected, ["dino", "sf"], assets);
+    expect(extra.map((a) => a._id)).toEqual(["expected:sf:world-premiere-callina-liang"]);
+    const all = [...assets, ...extra];
+    expect(buildPrompt(withExpected, projects, all)).toContain("A3 | World Premiere - Callina Liang | special-events");
+    const [m] = validate({ matches: [{ file: 0, projectId: null, assetId: "A3", confidence: 0.9, reason: "name" }] }, withExpected, projects, all);
+    expect(m).toMatchObject({ projectId: "sf", assetId: "expected:sf:world-premiere-callina-liang" });
   });
 });
 
@@ -329,5 +347,37 @@ describe("undo", () => {
     // Renaming it again counts normally.
     await recordResolutions(bob, [row]);
     expect(await stats(bob)).toMatchObject({ files: 1 });
+  });
+});
+
+describe("expected assets", () => {
+  beforeEach(() => {
+    useDatabase(createClient({ url: ":memory:" }));
+    // Alice sees Street Fighter and Dino; Bob only Dino.
+    vi.stubGlobal("fetch", async (_url: URL, init: RequestInit) => {
+      const auth = (init.headers as Record<string, string>).Authorization;
+      const projects = auth === "Bearer pat_a" ? [{ _id: "sf" }, { _id: "dino" }] : [{ _id: "dino" }];
+      return new Response(JSON.stringify(projects), { status: 200 });
+    });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("shares a pasted list with everyone who can see the project", async () => {
+    const names = ["World Premiere - Callina Liang", "World Premiere - Eric André", "World Premiere - Callina Liang"];
+    expect(await addExpected(alice, { projectId: "sf", type: "special-events", names })).toBe(2);
+    expect(await addExpected(alice, { projectId: "sf", type: "special-events", names: ["World Premiere - Eric Andre"] })).toBe(0);
+    await addExpected(alice, { projectId: "dino", type: "social", names: ["Tug of War"] });
+
+    const mine = await listExpected(alice);
+    expect(mine.map((a) => a.slug)).toEqual(["tug-of-war", "world-premiere-callina-liang", "world-premiere-eric-andre"]);
+    expect(mine[0]).toMatchObject({ projectId: "dino", type: "social", addedBy: "Alice" });
+    // Bob can't see Street Fighter, so he doesn't get its list and can't change it.
+    expect((await listExpected(bob)).map((a) => a.slug)).toEqual(["tug-of-war"]);
+    await expect(addExpected(bob, { projectId: "sf", type: "social", names: ["X"] })).rejects.toMatchObject({ status: 404 });
+    await expect(removeExpected(bob, "sf")).rejects.toMatchObject({ status: 404 });
+
+    await removeExpected(bob, "dino", "tug-of-war");
+    await removeExpected(alice, "sf");
+    expect(await listExpected(alice)).toEqual([]);
   });
 });

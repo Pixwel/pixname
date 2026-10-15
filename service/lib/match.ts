@@ -7,6 +7,7 @@ import { HttpError, pixwelGet, type Caller } from "./pixwel";
 
 export const MAX_FILES = 25;
 export const MAX_CANDIDATE_PROJECTS = 8;
+export const MAX_EXPECTED_ASSETS = 500;
 
 export const MatchRequest = z.object({
   files: z
@@ -25,6 +26,11 @@ export const MatchRequest = z.object({
     .max(MAX_FILES),
   /** The app's own best guesses; their assets are what the model chooses from. */
   candidateProjectIds: z.array(z.string().min(1).max(64)).max(MAX_CANDIDATE_PROJECTS).default([]),
+  /** Assets the team expects but Pixwel doesn't have yet (pasted from a delivery list in the app). */
+  expectedAssets: z
+    .array(z.object({ id: z.string().min(1).max(200), name: z.string().min(1).max(300), type: z.string().max(64), project: z.string().max(64) }))
+    .max(MAX_EXPECTED_ASSETS)
+    .default([]),
 });
 export type MatchRequest = z.infer<typeof MatchRequest>;
 
@@ -172,6 +178,14 @@ export function validate(raw: z.infer<typeof ModelOutput>, request: MatchRequest
   return out;
 }
 
+/** Expected assets of the candidate projects, unless Pixwel now has an asset by that name. */
+export function expectedOf(request: MatchRequest, candidates: string[], real: Asset[]): Asset[] {
+  const names = new Set(real.map((a) => `${projectOf(a)}|${a.name.trim().toLowerCase()}`));
+  return request.expectedAssets
+    .filter((a) => candidates.includes(a.project) && !names.has(`${a.project}|${a.name.trim().toLowerCase()}`))
+    .map((a) => ({ _id: a.id, name: a.name, type: a.type, project: a.project }));
+}
+
 export async function match(caller: Caller, request: MatchRequest): Promise<Match[]> {
   if (!aiAvailable()) throw new HttpError(503, "AI matching is off on this service (PIXNAME_AI=off, or no model key)");
 
@@ -179,7 +193,8 @@ export async function match(caller: Caller, request: MatchRequest): Promise<Matc
   const visible = new Set(projects.map((p) => p._id));
   // Only projects the caller can see; their assets come from Pixwel with the caller's own token.
   const candidates = request.candidateProjectIds.filter((id) => visible.has(id));
-  const assets = (await Promise.all(candidates.map((id) => pixwelGet<Asset[]>(caller, "assets", { project: id })))).flat();
+  const real = (await Promise.all(candidates.map((id) => pixwelGet<Asset[]>(caller, "assets", { project: id })))).flat();
+  const assets = [...real, ...expectedOf(request, candidates, real)];
 
   const { output } = await generateText({
     model: languageModel(),

@@ -1,4 +1,5 @@
 import { load, type Store } from "@tauri-apps/plugin-store";
+import type { Asset } from "./types";
 
 export type Environment = "production" | "staging" | "custom";
 
@@ -72,5 +73,21 @@ export async function loadAliases(settings: Settings): Promise<Aliases> {
 export async function saveAliases(settings: Settings, aliases: Aliases): Promise<void> {
   const s = await getStore();
   await s.set(aliasKey(settings), aliases);
+  await s.save();
+}
+
+/** Assets a team expects but Pixwel doesn't have yet, by project id (lib/expected). Kept per API environment. */
+export type ExpectedAssets = Record<string, Asset[]>;
+
+const expectedKey = (settings: Settings) => `expected:${baseUrl(settings)}`;
+
+export async function loadExpected(settings: Settings): Promise<ExpectedAssets> {
+  const s = await getStore();
+  return (await s.get<ExpectedAssets>(expectedKey(settings))) ?? {};
+}
+
+export async function saveExpected(settings: Settings, expected: ExpectedAssets): Promise<void> {
+  const s = await getStore();
+  await s.set(expectedKey(settings), expected);
   await s.save();
 }

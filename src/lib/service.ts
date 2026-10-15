@@ -144,6 +144,24 @@ const query = (params: Record<string, string | number | boolean | undefined>) =>
   return s ? `?${s}` : "";
 };
 
+/** A project's expected asset as the team shares it (service lib/expected.ts). */
+export interface SharedExpected {
+  projectId: string;
+  slug: string;
+  name: string;
+  type: string;
+  addedBy: string;
+  at: number;
+}
+
+/** An asset from a pasted delivery list, not in Pixwel yet. */
+export interface ExpectedAiAsset {
+  id: string;
+  name: string;
+  type: string;
+  project: string;
+}
+
 export const service = {
   health: (s: Settings) => call<Health>(s, "GET", "api/health"),
   codes: async (s: Settings) => (await call<{ codes: SharedCodes }>(s, "GET", "api/codes")).codes,
@@ -154,8 +172,12 @@ export const service = {
     (await call<{ matches: (TeamMatch | null)[] }>(s, "POST", "api/resolutions/lookup", { names })).matches,
   record: (s: Settings, resolutions: Resolution[]) => call(s, "POST", "api/resolutions", { resolutions }),
   undo: (s: Settings, renames: { name: string; newName: string }[]) => call(s, "POST", "api/resolutions/undo", { renames }),
-  match: async (s: Settings, files: AiFile[], candidateProjectIds: string[]) =>
-    (await call<{ matches: AiMatch[] }>(s, "POST", "api/match", { files, candidateProjectIds })).matches,
+  match: async (s: Settings, files: AiFile[], candidateProjectIds: string[], expectedAssets: ExpectedAiAsset[] = []) =>
+    (await call<{ matches: AiMatch[] }>(s, "POST", "api/match", { files, candidateProjectIds, expectedAssets })).matches,
+  expected: async (s: Settings) => (await call<{ assets: SharedExpected[] }>(s, "GET", "api/expected")).assets,
+  addExpected: async (s: Settings, projectId: string, type: string, names: string[]) =>
+    (await call<{ added: number }>(s, "POST", "api/expected", { projectId, type, names })).added,
+  removeExpected: (s: Settings, projectId: string, slug?: string) => call(s, "DELETE", `api/expected${query({ projectId, slug })}`),
   history: (s: Settings, q: HistoryQuery) =>
     call<{ rows: HistoryRow[]; more: boolean }>(s, "GET", `api/activity/history${query({ ...q })}`),
   stats: (s: Settings, days: number) => call<Stats>(s, "GET", `api/activity/stats${query({ days })}`),

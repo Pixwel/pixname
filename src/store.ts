@@ -2,7 +2,8 @@ import { log, percent } from "./log";
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { FALLBACK_CATALOG, apiGet, fetchAssets, fetchProjects, fetchWorkRequests, loadCatalog } from "./lib/api";
-import { loadAliases, loadSettings, saveAliases, saveSettings, type Aliases, type Settings, DEFAULT_SETTINGS } from "./lib/settings";
+import { loadAliases, loadExpected, loadSettings, saveAliases, saveExpected, saveSettings, type Aliases, type ExpectedAssets, type Settings, DEFAULT_SETTINGS } from "./lib/settings";
+import { expectedAsset, isExpected, withExpected } from "./lib/expected";
 import { mediaTypeOf, durationOf } from "./lib/media";
 import { parseFilename } from "./lib/parse";
 import { dirsOf, rankAssets } from "./lib/fuzzy";
@@ -70,6 +71,8 @@ interface State {
   sharedCodes: SharedCodes;
   /** Admins' asset rules: "a file name containing these words is this asset" (from the service). */
   assetRules: AssetRule[];
+  /** Assets pasted from a delivery list that Pixwel doesn't have yet, by project; matched like real ones. */
+  expected: ExpectedAssets;
   /** Pixname-wide rules and activity changed (rules added/removed); views refetch on this. */
   rulesVersion: number;
   reloadRules(): Promise<void>;
@@ -100,12 +103,72 @@ interface State {
   setAlias(code: string, projectId: string): Promise<void>;
   /** Ask the service's AI about these files (all of them when asked by hand). */
   askAi(ids: string[], manual?: boolean): Promise<void>;
+  /** Add expected asset names to a project; returns how many were new. */
+  addExpected(projectId: string, names: string[], type: string): Promise<number>;
+  /** Forget one expected asset, or all of a project's when no id is given. */
+  removeExpected(projectId: string, assetId?: string): Promise<void>;
 }
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export const useStore = create<State>((set, get) => {
   const pending = new Map<string, Promise<any>>();
+  /** Assets as Pixwel returned them, by project; `assets` adds the expected ones on top. */
+  const realAssets = new Map<string, Asset[]>();
+
+  /** Rebuild a loaded project's asset list after its expected assets changed. */
+  const remerge = (projectId: string) => {
+    const real = realAssets.get(projectId);
+    if (real) set((s) => ({ assets: { ...s.assets, [projectId]: { status: "ready", data: withExpected(real, s.expected[projectId]) } } }));
+  };
+
+  /** Show a new set of expected assets in every loaded project they touch. */
+  function showExpected(expected: ExpectedAssets) {
+    const touched = new Set([...Object.keys(get().expected), ...Object.keys(expected)]);
+    set({ expected });
+    touched.forEach(remerge);
+  }
+
+  let expectedFetchedAt = 0;
+  /** Expected assets: the team's lists from the service, or this computer's when working alone. */
+  async function loadExpectedLists(force = true) {
+    const settings = get().settings;
+    if (!serviceReady()) {
+      showExpected(await loadExpected(settings).catch(() => ({})));
+      return;
+    }
+    if (!force && Date.now() - expectedFetchedAt < 30_000) return;
+    expectedFetchedAt = Date.now();
+    try {
+      // Lists pasted on this computer before the team shared them move to the service once.
+      const local = await loadExpected(settings).catch(() => ({}) as ExpectedAssets);
+      if (Object.keys(local).length) {
+        for (const [projectId, list] of Object.entries(local)) {
+          const byType = new Map<string, string[]>();
+          for (const a of list) byType.set(a.type, [...(byType.get(a.type) ?? []), a.name]);
+          for (const [type, names] of byType) await service.addExpected(settings, projectId, type, names).catch(() => 0);
+        }
+        await saveExpected(settings, {});
+        log.info(`Shared this computer's expected assets with the team`);
+      }
+      const expected: ExpectedAssets = {};
+      for (const a of await service.expected(settings)) {
+        (expected[a.projectId] ??= []).push(expectedAsset(a.projectId, a.name, a.type, a.addedBy));
+      }
+      showExpected(expected);
+    } catch (e) {
+      log.warn(`Loading the team's expected assets failed: ${errorText(e)}`);
+    }
+  }
+
+  /** Re-match files of a project after its expected assets changed. */
+  function rematchProject(projectId: string, removed = new Set<string>()) {
+    const affected = get().items.filter((i) => i.asset && removed.has(i.asset.id));
+    for (const i of affected) get().updateItem(i.id, { asset: undefined });
+    get()
+      .items.filter((i) => !i.probing && i.project?.id === projectId && (!i.asset || i.asset.source === "fuzzy"))
+      .forEach((i) => match(i.id));
+  }
   /** Cross-project asset searches by query, shared by every file in a drop. */
   const assetSearches = new Map<string, Promise<Asset[]>>();
 
@@ -249,6 +312,7 @@ export const useStore = create<State>((set, get) => {
     const { settings } = get();
     if (!serviceEnabled(settings)) {
       set({ service: { status: "off" }, sharedCodes: {}, assetRules: [] });
+      await loadExpectedLists();
       return;
     }
     set({ service: { status: "loading" } });
@@ -264,9 +328,13 @@ export const useStore = create<State>((set, get) => {
       set({ service: { status: "error", error: errorText(e) } });
       log.warn(`Pixname service unavailable: ${errorText(e)}`);
     }
+    await loadExpectedLists();
   }
 
   const serviceReady = () => get().service.status === "ready";
+
+  /** Expected assets aren't in Pixwel, so their ids mean nothing to the team's records. */
+  const pixwelAsset = (id?: string) => (id && !isExpected(id) ? id : null);
 
   /** Tell the service how renamed files were resolved: shared codes and team memory for everyone. */
   function reportRenames(items: QueueItem[], newNames: Map<string, string>) {
@@ -279,10 +347,10 @@ export const useStore = create<State>((set, get) => {
         name: i.file.name,
         dirs: dirsOf(i.file),
         projectId: i.project!.id,
-        assetId: i.asset?.id ?? null,
+        assetId: pixwelAsset(i.asset?.id),
         source: i.project!.source,
         guess: i.guess?.project
-          ? { projectId: i.guess.project.id, assetId: i.guess.asset?.id ?? null, source: i.guess.project.source, score: i.guess.project.score }
+          ? { projectId: i.guess.project.id, assetId: pixwelAsset(i.guess.asset?.id), source: i.guess.project.source, score: i.guess.project.score }
           : null,
         newName: newNames.get(i.file.path) ?? null,
         size: i.file.size,
@@ -385,6 +453,7 @@ export const useStore = create<State>((set, get) => {
     service: { status: "off" },
     sharedCodes: {},
     assetRules: [],
+    expected: {},
     rulesVersion: 0,
 
     async reloadRules() {
@@ -417,7 +486,15 @@ export const useStore = create<State>((set, get) => {
     async updateSettings(settings) {
       await saveSettings(settings);
       assetSearches.clear();
-      set({ settings, settingsOpen: false, assets: {}, workRequests: {}, aliases: await loadAliases(settings).catch(() => ({})) });
+      realAssets.clear();
+      set({
+        settings,
+        settingsOpen: false,
+        assets: {},
+        workRequests: {},
+        aliases: await loadAliases(settings).catch(() => ({})),
+        expected: {},
+      });
       await get().refresh();
     },
 
@@ -452,6 +529,7 @@ export const useStore = create<State>((set, get) => {
 
     selectProject(id) {
       set({ selectedProjectId: id });
+      if (id) loadExpectedLists(false);
       if (id) get().ensureAssets(id).catch(() => {});
     },
 
@@ -467,9 +545,10 @@ export const useStore = create<State>((set, get) => {
         set((s) => ({ assets: { ...s.assets, [projectId]: { status: "loading" } } }));
         const p = fetchAssets(get().settings, projectId)
           .then((data) => {
-            const sorted = [...data].sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
-            set((s) => ({ assets: { ...s.assets, [projectId]: { status: "ready", data: sorted } } }));
-            return sorted;
+            realAssets.set(projectId, data);
+            const merged = withExpected(data, get().expected[projectId]);
+            set((s) => ({ assets: { ...s.assets, [projectId]: { status: "ready", data: merged } } }));
+            return merged;
           })
           .catch((e) => {
             log.error(`Loading assets for ${projectId} failed: ${errorText(e)}`);
@@ -504,6 +583,7 @@ export const useStore = create<State>((set, get) => {
     },
 
     async addPaths(paths, target) {
+      loadExpectedLists(false);
       const entries = await invoke<FileEntry[]>("expand_paths", { paths });
       log.info(
         `Added ${entries.length} file(s) from ${paths.length} path(s)` +
@@ -673,7 +753,10 @@ export const useStore = create<State>((set, get) => {
         batch.forEach((i) => get().updateItem(i.id, { aiPending: true }));
         log.info(`Asking AI about ${batch.length} file(s)`);
         try {
-          const matches = await service.match(get().settings, files, candidateIds);
+          const expectedAssets = candidateIds.flatMap((projectId) =>
+            (get().expected[projectId] ?? []).map((a) => ({ id: a._id, name: a.name, type: a.type, project: projectId })),
+          );
+          const matches = await service.match(get().settings, files, candidateIds, expectedAssets);
           for (const m of matches) {
             const original = batch[m.file];
             const item = original && get().items.find((i) => i.id === original.id);
@@ -705,6 +788,43 @@ export const useStore = create<State>((set, get) => {
           });
         }
       }
+    },
+
+    async addExpected(projectId, names, type) {
+      const settings = get().settings;
+      let added: number;
+      if (serviceReady()) {
+        added = await service.addExpected(settings, projectId, type, names);
+        await loadExpectedLists();
+      } else {
+        const current = get().expected[projectId] ?? [];
+        const slugs = new Set(current.map((a) => a.slug));
+        const fresh = names.map((name) => expectedAsset(projectId, name, type)).filter((a) => !slugs.has(a.slug) && slugs.add(a.slug));
+        added = fresh.length;
+        const expected = { ...get().expected, [projectId]: [...current, ...fresh] };
+        showExpected(expected);
+        await saveExpected(settings, expected);
+      }
+      log.info(`Added ${added} expected asset(s) to ${projectId}${serviceReady() ? " for the team" : ""}`);
+      // Files in this project still waiting for an asset may fit one of the new names.
+      if (added) rematchProject(projectId);
+      return added;
+    },
+
+    async removeExpected(projectId, assetId) {
+      const settings = get().settings;
+      const current = get().expected[projectId] ?? [];
+      const gone = current.filter((a) => !assetId || a._id === assetId);
+      if (serviceReady()) {
+        await service.removeExpected(settings, projectId, assetId ? gone[0]?.slug : undefined);
+        await loadExpectedLists();
+      } else {
+        const expected = { ...get().expected, [projectId]: current.filter((a) => !gone.includes(a)) };
+        if (!expected[projectId].length) delete expected[projectId];
+        showExpected(expected);
+        await saveExpected(settings, expected);
+      }
+      rematchProject(projectId, new Set(gone.map((a) => a._id)));
     },
 
     async setAlias(code, projectId) {

@@ -30,7 +30,10 @@ Route handlers live in `app/api/*/route.ts`; the logic is in `lib/` (Pixwel auth
 | `POST /api/resolutions` | `{ resolutions: [{ name, dirs, projectId, assetId, source, guess }] }`, sent after a rename |
 | `POST /api/resolutions/lookup` | `{ names }` → the team's answer for the most similar earlier file, per name |
 | `GET /api/resolutions/insights?days=30` | How files were resolved, how often AI suggestions were kept, recent misses |
-| `POST /api/match` | `{ files: [{ name, dirs, durationSec, aspect, mediaType }], candidateProjectIds }` → `{ matches: [{ file, projectId, assetId, confidence, reason }] }` |
+| `POST /api/match` | `{ files: [{ name, dirs, durationSec, aspect, mediaType }], candidateProjectIds, expectedAssets? }` → `{ matches: [{ file, projectId, assetId, confidence, reason }] }` |
+| `GET /api/expected` | `{ assets: [{ projectId, slug, name, type, addedBy, at }] }`: expected assets (pasted from delivery docs, not in Pixwel yet) of projects you can see |
+| `POST /api/expected` | `{ projectId, type, names }` → `{ added }`: add a pasted list |
+| `DELETE /api/expected?projectId=…&slug=…` | Forget one expected asset, or the project's whole list without `slug` |
 
 ## Deploying (once)
 

@@ -34,8 +34,8 @@ export function ItemEditor({ row }: { row: Row }) {
     ).slice(0, 5);
     const top = new Set(ranked.map((r) => r.item._id));
     return [
-      ...ranked.map((r) => ({ asset: r.item, label: `${Math.round(r.score * 100)}% · ${r.item.name}` })),
-      ...assets.data.filter((a) => !top.has(a._id)).map((a) => ({ asset: a, label: `${a.name} · ${a.type}` })),
+      ...ranked.map((r) => ({ asset: r.item, label: `${Math.round(r.score * 100)}% · ${r.item.name}${r.item.expected ? " · expected" : ""}` })),
+      ...assets.data.filter((a) => !top.has(a._id)).map((a) => ({ asset: a, label: `${a.name} · ${a.type}${a.expected ? " · expected" : ""}` })),
     ];
   }, [assets, item.file.name, item.probe, project]);
 

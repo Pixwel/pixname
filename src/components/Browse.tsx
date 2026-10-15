@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "../store";
 import { useDropHot } from "../useFileDrop";
 import { PickArt, PickButtons, pickPaths } from "./PickFiles";
+import { ExpectedDialog } from "./ExpectedDialog";
 import { assetTitleToken } from "../lib/fuzzy";
 import { formatDuration } from "../lib/media";
 import { typeToken } from "../lib/parse";
@@ -39,15 +40,29 @@ function ProjectRow({ project, active, count }: { project: Project; active: bool
 
 function AssetRow({ asset, project, count }: { asset: Asset; project: Project; count?: number }) {
   const hot = useDropHot(`asset:${asset._id}`);
+  const removeExpected = useStore((s) => s.removeExpected);
   return (
     <div
-      className={`asset-row ${hot ? "drop-hot" : ""}`}
+      className={`asset-row ${asset.expected ? "expected" : ""} ${hot ? "drop-hot" : ""}`}
       data-drop-project={project._id}
       data-drop-asset={asset._id}
       data-drop-label={`${asset.name}`}
     >
       <div className="name">
         {asset.name} {count ? <span className="count-badge">{count}</span> : null}
+        {asset.expected && (
+          <span className="expected-tag" title={`From a pasted list${asset.addedBy ? ` (added by ${asset.addedBy})` : ""}; not in Pixwel yet`}>
+            Expected
+            <button
+              className="forget"
+              title="Forget this expected asset"
+              aria-label={`Forget ${asset.name}`}
+              onClick={() => removeExpected(project._id, asset._id)}
+            >
+              ✕
+            </button>
+          </span>
+        )}
       </div>
       <div className="title mono">{assetTitleToken(asset)}</div>
       <div className="faint">{asset.length ? formatDuration(asset.length) : ""}</div>
@@ -62,6 +77,7 @@ function ProjectPane({ project }: { project: Project }) {
   const types = useStore((s) => s.catalog.types);
   const counts = useQueuedCounts();
   const [query, setQuery] = useState("");
+  const [pasting, setPasting] = useState(false);
   const hot = useDropHot(`project:${project._id}`);
 
   const groups = useMemo(() => {
@@ -97,6 +113,13 @@ function ProjectPane({ project }: { project: Project }) {
         <button className="btn" title={`Choose a folder for ${project.name}`} onClick={() => pickPaths("folder", { projectId: project._id })}>
           Choose…
         </button>
+        <button
+          className="btn"
+          title="Paste the asset names you're expecting (not in Pixwel yet) so files can be matched and named to them"
+          onClick={() => setPasting(true)}
+        >
+          Expected…
+        </button>
         <input className="field" style={{ width: 240 }} placeholder="Filter assets" value={query} onChange={(e) => setQuery(e.target.value)} />
         <button className="btn ghost" title="Close project (Esc)" aria-label="Close project" onClick={() => selectProject(undefined)}>
           ✕
@@ -115,6 +138,7 @@ function ProjectPane({ project }: { project: Project }) {
           </div>
         ))}
       </div>
+      {pasting && <ExpectedDialog project={project} onClose={() => setPasting(false)} />}
     </div>
   );
 }

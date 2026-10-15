@@ -115,13 +115,7 @@ jobs:
 
             Installed copies update themselves: Pixname offers the new version when it starts.
 
-            ## First launch on macOS
-
-            This build isn't notarized by Apple yet, so the first time you open it macOS says it "could not verify" Pixname.
-            Click **Done**, open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-            You only need to do this once; updates install without it.
-
-            On Windows, if SmartScreen appears, click **More info → Run anyway**.
+            The Mac app is signed and notarized by Apple. On Windows, if SmartScreen appears, click **More info → Run anyway**.
 
             ## Setup
 

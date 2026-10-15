@@ -292,15 +292,18 @@ export function rankAssets(
   for (const w of ["vertical", "square"]) typeWords.delete(w);
   const code = vendorCodeOf(facts.name);
   // Tags (FLAT, SCOPE, 2K, PRORES…) describe the delivery, not which asset it is.
-  const clean = (tokens: string[]) =>
-    tokens.filter((t) => !projectWords.has(t) && !typeWords.has(singular(t)) && t !== code && !findTag(catalog.tags, t));
+  const delivery = (t: string) => projectWords.has(t) || t === code || !!findTag(catalog.tags, t);
+  const clean = (tokens: string[]) => tokens.filter((t) => !delivery(t) && !typeWords.has(singular(t)));
   const shape = orientationOf([facts.name, ...facts.dirs.slice(0, 1)].join(" "));
 
   // Each source is scored on its own, then weighted: the file name, the name plus its
   // folder ("Explainer Vertical 30/GRK_final.mov"), then each folder walking outwards.
-  const fileContent = clean(looseHints(facts.name, catalog).content);
+  const fileWords = looseHints(facts.name, catalog).content;
+  const fileContent = clean(fileWords);
+  // Type words can be the asset's name after all ("World Premiere - B-Roll"): compare those too, for a bit less.
+  const fileWithTypes = fileWords.filter((t) => !delivery(t));
   // "9x16" means the Vertical version of an asset, "1x1" the Square one.
-  if (shape === "vertical" || shape === "square") fileContent.push(shape);
+  if (shape === "vertical" || shape === "square") fileContent.push(shape), fileWithTypes.push(shape);
   const folderContent = facts.dirs.map((d) => clean(looseHints(d, catalog, true).content));
   const sources: { tokens: string[]; weight: number }[] = [{ tokens: fileContent, weight: 1 }];
   if (folderContent[0]?.length) sources.push({ tokens: [...fileContent, ...folderContent[0]], weight: 0.95 });
@@ -323,18 +326,17 @@ export function rankAssets(
       const assetTokens = identity.length ? identity : slugTokens;
       if (!assetTokens.length) return { item: asset, score: 0 };
 
-      let score = 0;
-      for (const { tokens, weight } of sources) {
-        if (!tokens.length) continue;
-        const recall = assetTokens.reduce((s, t) => s + bestSim(t, tokens), 0) / assetTokens.length;
+      const fit = (target: string[], tokens: string[]) => {
+        if (!target.length || !tokens.length) return 0;
+        const recall = target.reduce((s, t) => s + bestSim(t, tokens), 0) / target.length;
         // Numbers ("16x9", "30") are judged by the number check below, not as unmatched words.
         const words = tokens.filter((t) => !/^\d+$/.test(t));
-        const precision = words.length
-          ? words.reduce((s, t) => s + (bestSim(t, assetTokens) >= 0.6 ? 1 : 0), 0) / words.length
-          : 0.5;
-        const f = recall + precision > 0 ? (2 * recall * precision) / (recall + precision) : 0;
-        score = Math.max(score, f * weight);
-      }
+        const precision = words.length ? words.reduce((s, t) => s + (bestSim(t, target) >= 0.6 ? 1 : 0), 0) / words.length : 0.5;
+        return recall + precision > 0 ? (2 * recall * precision) / (recall + precision) : 0;
+      };
+      let score = 0;
+      for (const { tokens, weight } of sources) score = Math.max(score, fit(assetTokens, tokens) * weight);
+      score = Math.max(score, fit(slugTokens.filter((t) => !projectWords.has(t)), fileWithTypes) * 0.9);
 
       // Asset type named by the file or a folder ("TV Spots/", "_SOCIAL_").
       if (hintedTypes.size) score += hintedTypes.has(asset.type) ? 0.1 : -0.1;

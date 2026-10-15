@@ -21,6 +21,10 @@ export interface Asset {
   project: string | { _id: string };
   /** Unix seconds. */
   created?: number;
+  /** Not in Pixwel yet: pasted from a list of assets the team expects (lib/expected). */
+  expected?: boolean;
+  /** Who added it to the team's list. */
+  addedBy?: string;
 }
 
 export interface AssetType {

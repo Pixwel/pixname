@@ -16,8 +16,7 @@ the same code slurpee3 uses, so output matches what ingest produces.
 
 These links always point to the newest release. Installed copies check for updates on launch and every 15 minutes, then offer **Update and restart**. You can also check manually in **Settings → Check for updates**.
 
-Builds aren't notarized yet, so the first time a Mac user opens the app, macOS says it "could not verify" Pixname.
-Click **Done**, then go to **System Settings → Privacy & Security → Open Anyway**. Updates don't trigger the prompt again.
+Mac builds are signed with Pixwel's Developer ID and notarized by Apple, so they open without a warning.
 On Windows, if SmartScreen appears, click **More info → Run anyway**.
 
 ## Using it
@@ -29,6 +28,8 @@ On Windows, if SmartScreen appears, click **More info → Run anyway**.
    - **on a project**: assets are matched automatically
    - **anywhere else**: the project and asset are matched automatically
 4. Review the proposed names, fix anything flagged, then click **Rename**. **Undo last rename** reverts the most recent batch.
+
+**Assets that aren't in Pixwel yet**: open the project, click **Expected…** and paste the asset names from the delivery doc or spreadsheet, one per line, and choose their type. Files are matched to them and named as if Pixwel had them. With the Pixname service connected, the list is shared with everyone who can see the project; once the real asset is created in Pixwel, it takes over.
 
 ## Where context comes from (later wins)
 
