@@ -3,14 +3,25 @@ import { useStore } from "../store";
 import { parseExpectedNames, slugOf } from "../lib/expected";
 import { typeToken } from "../lib/parse";
 import type { Project } from "../lib/types";
+import { TypePicker } from "./TypePicker";
 
 const TYPE_KEY = "px-expected-type";
+const USES_KEY = "px-type-uses";
 
 function rememberedType(): string | null {
   try {
     return localStorage.getItem(TYPE_KEY);
   } catch {
     return null;
+  }
+}
+
+/** How often you've picked each type here. */
+function pickedUses(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(USES_KEY) ?? "{}") ?? {};
+  } catch {
+    return {};
   }
 }
 
@@ -29,7 +40,12 @@ export function ExpectedDialog({ project, onClose }: { project: Project; onClose
   });
   const [busy, setBusy] = useState(false);
 
-  const sortedTypes = useMemo(() => [...types].sort((a, b) => a.name.localeCompare(b.name)), [types]);
+  // Your picks plus the types this project already has.
+  const uses = useMemo(() => {
+    const out = pickedUses();
+    for (const a of assets?.status === "ready" ? assets.data : []) out[a.type] = (out[a.type] ?? 0) + 1;
+    return out;
+  }, [assets]);
   const names = useMemo(() => parseExpectedNames(text), [text]);
   const known = useMemo(() => new Set(assets?.status === "ready" ? assets.data.map((a) => a.slug) : []), [assets]);
   const fresh = names.filter((n) => !known.has(slugOf(n)));
@@ -39,6 +55,8 @@ export function ExpectedDialog({ project, onClose }: { project: Project; onClose
     setBusy(true);
     try {
       localStorage.setItem(TYPE_KEY, type);
+      const picked = pickedUses();
+      localStorage.setItem(USES_KEY, JSON.stringify({ ...picked, [type]: (picked[type] ?? 0) + 1 }));
     } catch {
       // Only a convenience.
     }
@@ -81,20 +99,14 @@ export function ExpectedDialog({ project, onClose }: { project: Project; onClose
               </span>
             )}
           </label>
-          <label>
+          <div className="field-group">
             <span>Asset type</span>
-            <select className="field" value={type} onChange={(e) => setType(e.target.value)}>
-              {sortedTypes.map((t) => (
-                <option key={t.name} value={t.name}>
-                  {t.name} · {/trailer/.test(t.name) ? "no type token" : typeToken(t)}
-                </option>
-              ))}
-            </select>
+            <TypePicker types={types} value={type} onChange={setType} uses={uses} />
             <span className="hint">
               {chosen && !/trailer/.test(chosen.name) ? `Goes into the new names (…_${typeToken(chosen)}_…). ` : ""}Paste lists of other
               types separately.
             </span>
-          </label>
+          </div>
         </div>
         <div className="actions">
           {existing > 0 && (
