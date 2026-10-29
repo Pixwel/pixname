@@ -166,6 +166,27 @@ export function looseHints(name: string, catalog: Catalog, isFolder = false): Lo
   return hints;
 }
 
+/**
+ * Parts of a vendor name worth keeping as tags (a studio convention): the leading ID, with a spot
+ * number that follows it ("FFSS26_5083" -> FFSS265083, "FFSS261574XH"), and pieces that aren't the
+ * asset, a language or a technical word ("OnlyITThisFri"; the rendered name uppercases it).
+ */
+export function nameTags(fileName: string, asset: Asset, catalog: Catalog): { idCode?: string; leftovers: string[] } {
+  const pieces = stripExt(fileName).split(/[_\s]+/).filter(Boolean);
+  let idCode: string | undefined;
+  if (/^[A-Z]{2,}\d[A-Z0-9]*$/.test(pieces[0] ?? "")) {
+    idCode = pieces.shift()!;
+    while (/^\d+$/.test(pieces[0] ?? "")) idCode += pieces.shift();
+  }
+  const known = new Set([...tokenize(asset.name), ...tokenize(asset.slug), ...tokenize(asset.type), "spot", "spots", "vert", "vertical", "square"]);
+  const isKnown = (piece: string) => {
+    const tokens = tokenize(piece);
+    if (findTag(catalog.tags, piece) || languageFromTokens(tokens, catalog).used.size === tokens.length) return true;
+    return tokens.every((t) => known.has(t) || known.has(singular(t)) || NOISE.has(t) || /^\d+$/.test(t) || /^v\d+$/.test(t));
+  };
+  return { idCode, leftovers: pieces.filter((p) => !isKnown(p)) };
+}
+
 const singular = (t: string) => (t.length > 3 && t.endsWith("s") && !t.endsWith("ss") ? t.slice(0, -1) : t);
 
 /**

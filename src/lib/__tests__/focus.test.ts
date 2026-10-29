@@ -98,6 +98,20 @@ describe("Focus names", () => {
     expect(propose(zip, { catalog, projects, project: sense, asset: ambition }).name).not.toMatch(/COLLECT/);
   });
 
+  it("keeps the ID code and endcard as tags where the conventions are on", () => {
+    const conventions = { idCodeTag: true, leftoverTags: true };
+    expect(propose(item(DIGITAL), { catalog, projects, project: sense, asset: forLove, conventions }).name).toBe(
+      "SENSEANDSENSIBILITY_DIGITAL-SPOTS_FOR-LOVE-REVIEW-DIGITAL-30_ENG_TXTD_FFSS265083_ONLYITTHISFRI_PRORES_1080p2398.mov",
+    );
+    expect(propose(item("FFSS261574XH.mov"), { catalog, projects, project: sense, asset: ambitionTv, conventions }).name).toMatch(
+      /_ENG-US_TXTD_FFSS261574XH_PRORES_/,
+    );
+    expect(propose(item(DIGITAL), { catalog, projects, project: sense, asset: forLove, conventions: { idCodeTag: true } }).name).not.toMatch(
+      /ONLYITTHISFRI/,
+    );
+    expect(propose(item(DIGITAL), { catalog, projects, project: sense, asset: forLove }).name).not.toMatch(/FFSS|ONLYIT/);
+  });
+
   it("lets a project override its studio", () => {
     const rows: ConventionRow[] = [
       { scope: "studio", targetId: FOCUS, values: { zipCollect: true }, updatedBy: "x", at: 0 },

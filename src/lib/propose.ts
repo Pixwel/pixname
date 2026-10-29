@@ -3,7 +3,7 @@
 import { Ingest } from "@pixwel/pixwel-sdk";
 import type { Asset, Catalog, DownloadTags, Project, QueueItem, WorkRequest } from "./types";
 import { DEFAULT_TEXT_TAGS, parseFilename } from "./parse";
-import { assetTitleToken, contextHints, dirsOf } from "./fuzzy";
+import { assetTitleToken, contextHints, dirsOf, nameTags } from "./fuzzy";
 import { tagsFromFfprobe, tagsFromMediainfo } from "./media";
 import type { Conventions } from "./conventions";
 
@@ -133,6 +133,13 @@ export function propose(item: QueueItem, ctx: ProposeContext): Proposal {
 
   // A US asset type is for the US: "tv-spot.us" spots are ENG-US unless something says otherwise.
   if (asset?.type.endsWith(".us") && (!country || country === "WW")) country = "US";
+
+  // Studio conventions: an ID code and endcard words the studio wants carried into the name.
+  if (asset && !looksStandard && !workRequest && (ctx.conventions?.idCodeTag || ctx.conventions?.leftoverTags)) {
+    const { idCode, leftovers } = nameTags(item.file.name, asset, catalog);
+    const keep = [...(ctx.conventions.idCodeTag && idCode ? [idCode] : []), ...(ctx.conventions.leftoverTags ? leftovers : [])];
+    tags.Extra = [...new Set([...(tags.Extra ?? []), ...keep])];
+  }
 
   // Collects (a studio convention): the archive gets COLLECT instead of text and codec tokens.
   const ext = (item.ext || "").toLowerCase();

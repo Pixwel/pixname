@@ -44,7 +44,7 @@ const probe = {
 };
 
 /** The pretend service's house styles. */
-let mockConventions = [{ scope: "studio", targetId: "s-focus", values: { zipCollect: true }, updatedBy: "Jeff Loiselle", at: 1792000000 }];
+let mockConventions = [{ scope: "studio", targetId: "s-focus", values: { zipCollect: true, idCodeTag: true, leftoverTags: true }, updatedBy: "Jeff Loiselle", at: 1792000000 }];
 
 /** The pretend service's shared expected-asset lists. */
 let mockExpected: { projectId: string; slug: string; name: string; type: string; addedBy: string; at: number }[] = [];

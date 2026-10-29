@@ -5,7 +5,9 @@ import { database } from "./db";
 import { requireAdmin, type Caller } from "./pixwel";
 
 /** Known switches; unset means the app's general behaviour. Mirrors src/lib/conventions.ts. */
-export const Values = z.object({ zipCollect: z.boolean().optional() }).strict();
+export const Values = z
+  .object({ zipCollect: z.boolean().optional(), idCodeTag: z.boolean().optional(), leftoverTags: z.boolean().optional() })
+  .strict();
 
 export const SetRequest = z.object({
   scope: z.enum(["studio", "project"]),
