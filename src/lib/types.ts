@@ -11,6 +11,13 @@ export interface Project {
   created?: number;
 }
 
+export interface Studio {
+  _id: string;
+  name: string;
+}
+
+export const studioIdOf = (project: Project) => (typeof project.studio === "string" ? project.studio : project.studio?._id);
+
 export interface Asset {
   _id: string;
   name: string;

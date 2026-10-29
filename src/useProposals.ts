@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useStore } from "./store";
 import { distinguishingExtras } from "./lib/collisions";
+import { conventionsFor } from "./lib/conventions";
 import { propose, type Proposal, type ProposeContext } from "./lib/propose";
 import type { Match, QueueItem } from "./lib/types";
 
@@ -30,6 +31,7 @@ export function useProposals(): Row[] {
   const projects = useStore((s) => s.projects);
   const assets = useStore((s) => s.assets);
   const workRequests = useStore((s) => s.workRequests);
+  const conventions = useStore((s) => s.conventions);
 
   return useMemo(() => {
     const projectList = projects.status === "ready" ? projects.data : [];
@@ -43,7 +45,7 @@ export function useProposals(): Row[] {
         item.overrides.workRequestId && wrList?.status === "ready"
           ? wrList.data.find((w) => w._id === item.overrides.workRequestId)
           : undefined;
-      const ctx = { catalog, projects: projectList, project, asset, workRequest };
+      const ctx = { catalog, projects: projectList, project, asset, workRequest, conventions: conventionsFor(project, conventions) };
       const proposal = propose(item, ctx);
       if (!proposal.error && item.asset && !asset && assetList?.status !== "ready") {
         proposal.error = "Loading assets…";
@@ -81,7 +83,7 @@ export function useProposals(): Row[] {
       }
     }
     return rows;
-  }, [items, catalog, projects, assets, workRequests]);
+  }, [items, catalog, projects, assets, workRequests, conventions]);
 }
 
 /** Groups of rows whose proposed names clash in one folder (case-insensitively, for macOS/Windows). */

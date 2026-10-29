@@ -7,6 +7,13 @@ const projects = [
   { _id: "p2", name: "Paw Patrol: The Mighty Movie", slug: "paw-patrol", filePrefix: "PAWPATROL" },
   { _id: "p3", name: "Street Fighter", slug: "street-fighter", filePrefix: "STREETFIGHTER" },
   { _id: "p4", name: "Sin Fronteras", slug: "sin-fronteras", filePrefix: "SINFRONTERAS" },
+  { _id: "p5", name: "Sense and Sensibility", slug: "sense-and-sensibility", filePrefix: "SENSEANDSENSIBILITY", studio: "s-focus" },
+  { _id: "p6", name: "Six: The Musical Live!", slug: "six-the-musical-live", filePrefix: "SIX", studio: "s-focus" },
+].map((p) => ({ studio: "s-para", ...p }));
+
+const studios = [
+  { _id: "s-focus", name: "Focus Features" },
+  { _id: "s-para", name: "Paramount" },
 ];
 
 const assets: Record<string, unknown[]> = {
@@ -15,6 +22,11 @@ const assets: Record<string, unknown[]> = {
     { _id: "a2", name: "Int'l Trailer A", slug: "intl-trailer-a", type: "trailer.intl", length: 167, mediaType: "video", project: "p1" },
     { _id: "a7", name: "Tug of War", slug: "tug-of-war", type: "social", length: 30, mediaType: "video", project: "p1" },
     { _id: "a3", name: "Energy Bumper Vertical 06", slug: "energy-bumper-vertical-06", type: "trailr-support", length: 6, mediaType: "video", project: "p1" },
+  ],
+  p5: [
+    { _id: "a8", name: "For Love Review Digital 30", slug: "for-love-review-digital-30", type: "digital-spots", length: 30, mediaType: "video", project: "p5" },
+    { _id: "a9", name: "Ambition Digital 53 Vertical", slug: "ambition-digital-53-vertical", type: "digital-spots", length: 53, project: "p5" },
+    { _id: "a10", name: "Ambition TV 30", slug: "ambition-tv-30", type: "tv-spot.us", length: 30, mediaType: "video", project: "p5" },
   ],
   p3: [
     { _id: "a4", name: "Andrew vs Noah: A Brotherhood Forged", slug: "andrew-vs-noah-a-brotherhood-forged", type: "social", length: 30, mediaType: "video", project: "p3" },
@@ -30,6 +42,9 @@ const probe = {
     format: { format_name: "mov", duration: "30.0" },
   },
 };
+
+/** The pretend service's house styles. */
+let mockConventions = [{ scope: "studio", targetId: "s-focus", values: { zipCollect: true }, updatedBy: "Jeff Loiselle", at: 1792000000 }];
 
 /** The pretend service's shared expected-asset lists. */
 let mockExpected: { projectId: string; slug: string; name: string; type: string; addedBy: string; at: number }[] = [];
@@ -76,6 +91,15 @@ export function installBrowserMock() {
               return { ok: true };
             }
             return { assets: mockExpected };
+          }
+          if (path === "api/conventions") {
+            if ((args as { method: string }).method === "PUT") {
+              mockConventions = mockConventions.filter((c) => c.scope !== body.scope || c.targetId !== body.targetId);
+              const values = Object.fromEntries(Object.entries(body.values).filter(([, v]) => v !== undefined && v !== null));
+              if (Object.keys(values).length) mockConventions.push({ ...body, values, updatedBy: "Jeff Loiselle", at: 1792000000 });
+              return { ok: true };
+            }
+            return { conventions: mockConventions };
           }
           if (path === "api/rules")
             return { rules: [{ id: 1, phrase: "chun li vert", words: ["chun", "li", "vert"], projectId: "p3", assetId: "a5", createdBy: "Jeff Loiselle", at: 1791900000 }] };
@@ -151,6 +175,7 @@ export function installBrowserMock() {
           return { ffprobe: "/opt/homebrew/bin/ffprobe", mediainfo: null };
         case "api_get":
           if (args.path === "projects") return projects;
+          if (args.path === "studios") return studios;
           if (args.path === "assets") {
             const query = Object.fromEntries(args.query);
             if (query.q) return Object.values(assets).flat().filter((a: any) => a.name.toLowerCase().includes(query.q.toLowerCase()));

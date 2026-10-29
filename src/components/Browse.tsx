@@ -3,10 +3,22 @@ import { useStore } from "../store";
 import { useDropHot } from "../useFileDrop";
 import { PickArt, PickButtons, pickPaths } from "./PickFiles";
 import { ExpectedDialog } from "./ExpectedDialog";
+import { ConventionsDialog } from "./ConventionsDialog";
+import { CONVENTIONS, conventionsFor } from "../lib/conventions";
 import { assetTitleToken } from "../lib/fuzzy";
 import { formatDuration } from "../lib/media";
 import { typeToken } from "../lib/parse";
-import type { Asset, Project } from "../lib/types";
+import { studioIdOf, type Asset, type Project } from "../lib/types";
+
+const STUDIO_KEY = "px-studio-filter";
+
+function rememberedStudio(): string {
+  try {
+    return localStorage.getItem(STUDIO_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 function useQueuedCounts() {
   const items = useStore((s) => s.items);
@@ -78,7 +90,15 @@ function ProjectPane({ project }: { project: Project }) {
   const counts = useQueuedCounts();
   const [query, setQuery] = useState("");
   const [pasting, setPasting] = useState(false);
+  const [styling, setStyling] = useState(false);
   const hot = useDropHot(`project:${project._id}`);
+  const isAdmin = useStore((s) => s.service.status === "ready" && !!s.service.health.user?.isAdmin);
+  const conventions = useStore((s) => s.conventions);
+  const studioName = useStore((s) => s.studios[studioIdOf(project) ?? ""]);
+  const applied = useMemo(() => {
+    const on = conventionsFor(project, conventions);
+    return CONVENTIONS.filter((c) => on[c.key]).map((c) => c.label);
+  }, [project, conventions]);
 
   const groups = useMemo(() => {
     if (assets?.status !== "ready") return [];
@@ -106,9 +126,10 @@ function ProjectPane({ project }: { project: Project }) {
         <div style={{ flex: 1 }}>
           <h1>{project.name}</h1>
           <div className="sub">
-            Prefix <span className="mono">{project.filePrefix ?? "— none set —"}</span> · Drop files on an asset, or here to
-            match assets automatically
+            {studioName ? `${studioName} · ` : ""}Prefix <span className="mono">{project.filePrefix ?? "— none set —"}</span> · Drop
+            files on an asset, or here to match assets automatically
           </div>
+          {applied.length > 0 && <div className="sub faint">Conventions: {applied.join(" · ")}</div>}
         </div>
         <button className="btn" title={`Choose a folder for ${project.name}`} onClick={() => pickPaths("folder", { projectId: project._id })}>
           Choose…
@@ -120,7 +141,12 @@ function ProjectPane({ project }: { project: Project }) {
         >
           Expected…
         </button>
-        <input className="field" style={{ width: 240 }} placeholder="Filter assets" value={query} onChange={(e) => setQuery(e.target.value)} />
+        {isAdmin && (
+          <button className="btn" title="House style for this project or its whole studio (admins)" onClick={() => setStyling(true)}>
+            Conventions…
+          </button>
+        )}
+        <input className="field" style={{ width: 180 }} placeholder="Filter assets" value={query} onChange={(e) => setQuery(e.target.value)} />
         <button className="btn ghost" title="Close project (Esc)" aria-label="Close project" onClick={() => selectProject(undefined)}>
           ✕
         </button>
@@ -139,6 +165,7 @@ function ProjectPane({ project }: { project: Project }) {
         ))}
       </div>
       {pasting && <ExpectedDialog project={project} onClose={() => setPasting(false)} />}
+      {styling && <ConventionsDialog project={project} onClose={() => setStyling(false)} />}
     </div>
   );
 }
@@ -149,14 +176,39 @@ export function Browse() {
   const openSettings = useStore((s) => s.openSettings);
   const counts = useQueuedCounts();
   const [query, setQuery] = useState("");
+  const studios = useStore((s) => s.studios);
+  const [studio, setStudio] = useState(rememberedStudio);
+
+  // Studios that have projects, most projects first.
+  const studioOptions = useMemo(() => {
+    const count = new Map<string, number>();
+    for (const p of projects.status === "ready" ? projects.data : []) {
+      const id = studioIdOf(p);
+      if (id && studios[id]) count.set(id, (count.get(id) ?? 0) + 1);
+    }
+    return [...count].sort((a, b) => b[1] - a[1] || studios[a[0]].localeCompare(studios[b[0]]));
+  }, [projects, studios]);
+
+  function chooseStudio(id: string) {
+    setStudio(id);
+    try {
+      localStorage.setItem(STUDIO_KEY, id);
+    } catch {
+      // Only a convenience.
+    }
+  }
 
   const list = useMemo(() => {
     if (projects.status !== "ready") return [];
     const q = query.trim().toLowerCase();
+    // A remembered studio that no longer has projects filters nothing.
+    const only = studioOptions.some(([id]) => id === studio) ? studio : "";
     return projects.data.filter(
-      (p) => !q || p.name.toLowerCase().includes(q) || (p.filePrefix ?? "").toLowerCase().includes(q),
+      (p) =>
+        (!only || studioIdOf(p) === only) &&
+        (!q || p.name.toLowerCase().includes(q) || (p.filePrefix ?? "").toLowerCase().includes(q)),
     );
-  }, [projects, query]);
+  }, [projects, query, studio, studioOptions]);
   const selected = projects.status === "ready" ? projects.data.find((p) => p._id === selectedId) : undefined;
 
   return (
@@ -164,6 +216,16 @@ export function Browse() {
       <aside className="sidebar">
         <div className="sidebar-head">
           <input className="field search" placeholder="Search projects" value={query} onChange={(e) => setQuery(e.target.value)} />
+          {studioOptions.length > 1 && (
+            <select className="field search studio-filter" value={studio} onChange={(e) => chooseStudio(e.target.value)}>
+              <option value="">All studios</option>
+              {studioOptions.map(([id, n]) => (
+                <option key={id} value={id}>
+                  {studios[id]} ({n})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         <div className="list">
           {projects.status === "loading" && <div className="empty">Loading projects…</div>}

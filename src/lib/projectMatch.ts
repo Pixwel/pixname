@@ -3,10 +3,10 @@
 //   - a vendor code abbreviates it ("STF" -> Street Fighter)
 //   - the file's words match an asset that lives in it (cross-project asset search)
 // Each signal alone may be weak or ambiguous; together they usually agree.
-import { abbrevScore, vendorCode } from "./abbrev";
+import { abbrevScore, studioCodeScore, vendorCode } from "./abbrev";
 import { looseHints, rankAssets, rankProjects, tokenize, type FileFacts, type Scored } from "./fuzzy";
 import { findTag } from "./parse";
-import type { Asset, Catalog, Project } from "./types";
+import { studioIdOf, type Asset, type Catalog, type Project } from "./types";
 
 /**
  * A code that clearly abbreviates one project ("STF" -> Street Fighter) is enough for a guess,
@@ -14,6 +14,8 @@ import type { Asset, Catalog, Project } from "./types";
  * and real asset evidence for another project still outweighs a code.
  */
 const ABBREV_WEIGHT = 0.75;
+/** Studio initials + title initials + year ("FFSS26") say more than a bare abbreviation. */
+const STUDIO_CODE_WEIGHT = 0.85;
 const EVIDENCE_WEIGHT = 0.9;
 export const PROJECT_THRESHOLD = 0.6;
 /** When the top two are this close, the guess is too ambiguous to apply automatically… */
@@ -21,8 +23,8 @@ const AMBIGUITY_MARGIN = 0.1;
 /** …unless one is clearly newer: current work beats old projects ("Tug of War" in 2026 vs 2020). */
 const RECENCY_GAP_SECONDS = 180 * 24 * 60 * 60;
 
-/** Name, folder and vendor-code scores per project id. */
-export function nameScores(facts: FileFacts, projects: Project[]): Map<string, number> {
+/** Name, folder and vendor-code scores per project id. `studios` maps studio ids to names. */
+export function nameScores(facts: FileFacts, projects: Project[], studios: Record<string, string> = {}): Map<string, number> {
   const scores = new Map<string, number>();
   for (const { item, score } of rankProjects(facts, projects)) scores.set(item._id, score);
   const codes = [vendorCode(facts.name), ...facts.dirs.slice(0, 2).map(vendorCode)].filter(Boolean) as string[];
@@ -31,6 +33,11 @@ export function nameScores(facts: FileFacts, projects: Project[]): Map<string, n
       const a = abbrevScore(code, project) * ABBREV_WEIGHT;
       if (a > (scores.get(project._id) ?? 0)) scores.set(project._id, a);
     }
+  }
+  for (const project of projects) {
+    const studio = studios[studioIdOf(project) ?? ""];
+    const s = Math.max(...[facts.name, ...facts.dirs.slice(0, 2)].map((n) => studioCodeScore(n, project, studio))) * STUDIO_CODE_WEIGHT;
+    if (s > (scores.get(project._id) ?? 0)) scores.set(project._id, s);
   }
   return scores;
 }

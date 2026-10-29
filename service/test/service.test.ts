@@ -8,6 +8,7 @@ import { aiAvailable, modelConfig } from "@/lib/model";
 import { history, insights, lookup, nameKey, recordResolutions, seen, stats, undoRenames } from "@/lib/resolutions";
 import { addRule, deleteRule, listRules, suggestions } from "@/lib/rules";
 import { addExpected, listExpected, removeExpected } from "@/lib/expected";
+import { listConventions, SetRequest, setConventions } from "@/lib/conventions";
 import { isAdminSession } from "@/lib/pixwel";
 import * as codesRoute from "@/app/api/codes/route";
 
@@ -379,5 +380,26 @@ describe("expected assets", () => {
     await removeExpected(bob, "dino", "tug-of-war");
     await removeExpected(alice, "sf");
     expect(await listExpected(alice)).toEqual([]);
+  });
+});
+
+describe("conventions", () => {
+  beforeEach(() => useDatabase(createClient({ url: ":memory:" })));
+
+  it("are set by admins, read by everyone, and cleared with no values", async () => {
+    await expect(setConventions(bob, { scope: "studio", targetId: "focus", values: { zipCollect: true } })).rejects.toThrow(/admins/);
+    await setConventions(alice, { scope: "studio", targetId: "focus", values: { zipCollect: true } });
+    await setConventions(alice, { scope: "project", targetId: "ss", values: { zipCollect: false } });
+    expect(await listConventions(bob)).toEqual([
+      expect.objectContaining({ scope: "project", targetId: "ss", values: { zipCollect: false }, updatedBy: "Alice" }),
+      expect.objectContaining({ scope: "studio", targetId: "focus", values: { zipCollect: true } }),
+    ]);
+    await setConventions(alice, { scope: "project", targetId: "ss", values: {} });
+    expect((await listConventions(bob)).map((c) => c.targetId)).toEqual(["focus"]);
+    expect(await listConventions({ ...alice, env: "staging" })).toEqual([]);
+  });
+
+  it("rejects switches it doesn't know", () => {
+    expect(() => SetRequest.parse({ scope: "studio", targetId: "x", values: { mystery: true } })).toThrow();
   });
 });

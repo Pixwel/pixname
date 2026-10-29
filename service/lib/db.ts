@@ -61,6 +61,17 @@ const SCHEMA = [
      added_at INTEGER NOT NULL,
      PRIMARY KEY (env, project_id, slug)
    )`,
+  // House styles per studio or project, set by admins (see lib/conventions.ts).
+  `CREATE TABLE IF NOT EXISTS conventions (
+     env TEXT NOT NULL,
+     scope TEXT NOT NULL,
+     target_id TEXT NOT NULL,
+     data TEXT NOT NULL,
+     updated_by TEXT NOT NULL,
+     updated_by_name TEXT NOT NULL DEFAULT '',
+     updated_at INTEGER NOT NULL,
+     PRIMARY KEY (env, scope, target_id)
+   )`,
 ];
 
 /** Columns added after the first release; added to existing databases on startup. */

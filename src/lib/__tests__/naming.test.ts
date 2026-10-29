@@ -108,8 +108,13 @@ describe("propose", () => {
   });
 
   it("reports what is missing", () => {
-    expect(propose(item("x.mov"), { catalog, projects, project: passenger, asset: explainer }).error).toMatch(/language/i);
     expect(propose(item("x.mov"), { catalog, projects, project: passenger }).error).toMatch(/asset/i);
+  });
+
+  it("assumes ENG when nothing names the language, and says so", () => {
+    const p = propose(item("x.mov"), { catalog, projects, project: passenger, asset: explainer });
+    expect(p.name).toMatch(/_ENG_/);
+    expect(p.notes.join(" ")).toMatch(/Language assumed ENG/);
   });
 });
 

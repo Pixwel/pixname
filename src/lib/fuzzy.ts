@@ -23,10 +23,13 @@ export function orientationOf(text: string): "vertical" | "horizontal" | "square
   return undefined;
 }
 
-/** Lowercased leading vendor code ("STF_…" -> "stf"); see abbrev.ts vendorCode. */
-function vendorCodeOf(fileName: string): string | undefined {
+/**
+ * Words of a leading code ("STF_…" -> stf, "FFSS261574XH.mov" -> ffss, 261574, xh), which say
+ * where a file comes from rather than which asset it is; see abbrev.ts vendorCode.
+ */
+function codeWords(fileName: string): Set<string> {
   const first = fileName.split(/[_\s.]/)[0] ?? "";
-  return first.length >= 2 && first.length <= 6 && /^[A-Z0-9]+$/.test(first) ? first.toLowerCase() : undefined;
+  return new Set(first.length >= 2 && /^[A-Z0-9]+$/.test(first) ? [first.toLowerCase(), ...tokenize(first)] : []);
 }
 
 /** Lowercase word tokens, splitting on separators and letter/digit boundaries. */
@@ -290,9 +293,9 @@ export function rankAssets(
   const typeWords = new Set(types.flatMap((t) => tokenize(typeToken(t))).map(singular));
   // Shape words name a version of an asset ("… Vertical"), even where a type uses them too.
   for (const w of ["vertical", "square"]) typeWords.delete(w);
-  const code = vendorCodeOf(facts.name);
+  const code = codeWords(facts.name);
   // Tags (FLAT, SCOPE, 2K, PRORES…) describe the delivery, not which asset it is.
-  const delivery = (t: string) => projectWords.has(t) || t === code || !!findTag(catalog.tags, t);
+  const delivery = (t: string) => projectWords.has(t) || code.has(t) || !!findTag(catalog.tags, t);
   const clean = (tokens: string[]) => tokens.filter((t) => !delivery(t) && !typeWords.has(singular(t)));
   const shape = orientationOf([facts.name, ...facts.dirs.slice(0, 1)].join(" "));
 

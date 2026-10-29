@@ -1,13 +1,14 @@
 import { log, percent } from "./log";
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import { FALLBACK_CATALOG, apiGet, fetchAssets, fetchProjects, fetchWorkRequests, loadCatalog } from "./lib/api";
+import { FALLBACK_CATALOG, apiGet, fetchAssets, fetchProjects, fetchStudios, fetchWorkRequests, loadCatalog } from "./lib/api";
 import { loadAliases, loadExpected, loadSettings, saveAliases, saveExpected, saveSettings, type Aliases, type ExpectedAssets, type Settings, DEFAULT_SETTINGS } from "./lib/settings";
 import { expectedAsset, isExpected, withExpected } from "./lib/expected";
 import { mediaTypeOf, durationOf } from "./lib/media";
 import { parseFilename } from "./lib/parse";
 import { dirsOf, rankAssets } from "./lib/fuzzy";
-import { vendorCode } from "./lib/abbrev";
+import { knownCode, vendorCode } from "./lib/abbrev";
+import type { ConventionRow, Conventions } from "./lib/conventions";
 import { assetEvidence, chooseProject, codeStrengths, combine, nameScores, searchQueries, teamStrength } from "./lib/projectMatch";
 import { ruleFor, service, serviceEnabled, type AiFile, type AssetRule, type Health, type Resolution, type SharedCodes } from "./lib/service";
 import type { Asset, Catalog, FileEntry, Match, MatchSource, Overrides, Probe, Project, QueueItem, WorkRequest } from "./lib/types";
@@ -56,6 +57,8 @@ interface State {
   catalog: Catalog;
   catalogWarnings: string[];
   projects: Loadable<Project[]>;
+  /** Studio names by id (projects carry only the id). */
+  studios: Record<string, string>;
   assets: Record<string, Loadable<Asset[]>>;
   workRequests: Record<string, Loadable<WorkRequest[]>>;
   selectedProjectId?: string;
@@ -71,6 +74,9 @@ interface State {
   sharedCodes: SharedCodes;
   /** Admins' asset rules: "a file name containing these words is this asset" (from the service). */
   assetRules: AssetRule[];
+  /** House styles per studio or project, set by admins (from the service; lib/conventions). */
+  conventions: ConventionRow[];
+  setConventions(scope: ConventionRow["scope"], targetId: string, values: Conventions): Promise<void>;
   /** Assets pasted from a delivery list that Pixwel doesn't have yet, by project; matched like real ones. */
   expected: ExpectedAssets;
   /** Pixname-wide rules and activity changed (rules added/removed); views refetch on this. */
@@ -190,7 +196,7 @@ export const useStore = create<State>((set, get) => {
     if (parsed.projectId) return { id: parsed.projectId, source: "prefix", score: 1 };
 
     const created = new Map(projects.map((p) => [p._id, p.created ?? 0]));
-    const names = nameScores(facts, projects);
+    const names = nameScores(facts, projects, get().studios);
     // The strongest clue behind each project's score, to say how it was matched.
     const why = new Map<string, { source: MatchSource; strength: number }>();
     for (const [id, score] of names) why.set(id, { source: "fuzzy", strength: score });
@@ -200,7 +206,7 @@ export const useStore = create<State>((set, get) => {
       if (strength > (why.get(id)?.strength ?? 0)) why.set(id, { source, strength });
     };
 
-    const code = vendorCode(item.file.name);
+    const code = knownCode(item.file.name, [...Object.keys(get().aliases), ...Object.keys(get().sharedCodes)]);
     if (code) for (const [id, strength] of codeStrengths(get().aliases[code], get().sharedCodes[code])) add(id, strength, "learned");
     if (item.team && item.team.similarity >= TEAM_MIN_SIMILARITY) add(item.team.projectId, teamStrength(item.team), "team");
     // An admin's asset rule is a deliberate decision: nearly as good as the file's own prefix.
@@ -311,7 +317,7 @@ export const useStore = create<State>((set, get) => {
   async function loadService() {
     const { settings } = get();
     if (!serviceEnabled(settings)) {
-      set({ service: { status: "off" }, sharedCodes: {}, assetRules: [] });
+      set({ service: { status: "off" }, sharedCodes: {}, assetRules: [], conventions: [] });
       await loadExpectedLists();
       return;
     }
@@ -323,6 +329,11 @@ export const useStore = create<State>((set, get) => {
         service.rules(settings),
       ]);
       set({ service: { status: "ready", health }, sharedCodes, assetRules });
+      // Separately, so an older service without conventions still connects.
+      service
+        .conventions(settings)
+        .then((conventions) => set({ conventions }))
+        .catch((e) => log.warn(`Loading conventions failed: ${errorText(e)}`));
       log.info(`Pixname service connected (${health.ai ? `AI: ${health.model}` : "AI off"}), ${Object.keys(sharedCodes).length} shared codes`);
     } catch (e) {
       set({ service: { status: "error", error: errorText(e) } });
@@ -444,6 +455,7 @@ export const useStore = create<State>((set, get) => {
     catalog: FALLBACK_CATALOG,
     catalogWarnings: [],
     projects: { status: "loading" },
+    studios: {},
     assets: {},
     workRequests: {},
     view: "browse",
@@ -453,6 +465,7 @@ export const useStore = create<State>((set, get) => {
     service: { status: "off" },
     sharedCodes: {},
     assetRules: [],
+    conventions: [],
     expected: {},
     rulesVersion: 0,
 
@@ -510,7 +523,14 @@ export const useStore = create<State>((set, get) => {
       }
       loadService();
       set({ projects: { status: "loading" } });
-      const [catalogResult, projectsResult] = await Promise.allSettled([loadCatalog(settings), fetchProjects(settings)]);
+      const [catalogResult, projectsResult, studiosResult] = await Promise.allSettled([
+        loadCatalog(settings),
+        fetchProjects(settings),
+        fetchStudios(settings),
+      ]);
+      // Studios only help matching ("FFSS26" = Focus Features' Sense and Sensibility) and filtering.
+      if (studiosResult.status === "fulfilled") set({ studios: studiosResult.value });
+      else log.warn(`Loading studios failed: ${errorText(studiosResult.reason)}`);
       if (catalogResult.status === "fulfilled") {
         set({ catalog: catalogResult.value.catalog, catalogWarnings: catalogResult.value.warnings });
         for (const w of catalogResult.value.warnings) log.warn(`Reference data: ${w}`);
@@ -737,7 +757,7 @@ export const useStore = create<State>((set, get) => {
         // The likeliest projects per file, so the AI sees their assets.
         const candidates = new Map<string, number>();
         for (const item of batch) {
-          const ranked = [...nameScores(factsOf(item), projects.data)].sort((a, b) => b[1] - a[1]).slice(0, 3);
+          const ranked = [...nameScores(factsOf(item), projects.data, get().studios)].sort((a, b) => b[1] - a[1]).slice(0, 3);
           for (const [id, score] of ranked) candidates.set(id, (candidates.get(id) ?? 0) + score);
           for (const id of [item.project?.id, item.team?.projectId]) if (id) candidates.set(id, (candidates.get(id) ?? 0) + 1);
         }
@@ -825,6 +845,13 @@ export const useStore = create<State>((set, get) => {
         await saveExpected(settings, expected);
       }
       rematchProject(projectId, new Set(gone.map((a) => a._id)));
+    },
+
+    async setConventions(scope, targetId, values) {
+      const settings = get().settings;
+      await service.setConventions(settings, { scope, targetId, values });
+      set({ conventions: await service.conventions(settings) });
+      log.info(`Conventions for ${scope} ${targetId}: ${JSON.stringify(values)}`);
     },
 
     async setAlias(code, projectId) {

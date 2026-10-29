@@ -2,6 +2,7 @@
 // team memory of how files were resolved, and AI matching. Calls go through Rust (no CORS),
 // authenticated with the user's own Pixwel token.
 import { invoke } from "@tauri-apps/api/core";
+import type { ConventionRow } from "./conventions";
 import type { MatchSource } from "./types";
 import { serviceUrlOf, type Settings } from "./settings";
 
@@ -186,6 +187,8 @@ export const service = {
   rules: async (s: Settings) => (await call<{ rules: AssetRule[] }>(s, "GET", "api/rules")).rules,
   addRule: (s: Settings, rule: { phrase: string; projectId: string; assetId: string }) => call(s, "POST", "api/rules", rule),
   deleteRule: (s: Settings, id: number) => call(s, "DELETE", `api/rules${query({ id })}`),
+  conventions: async (s: Settings) => (await call<{ conventions: ConventionRow[] }>(s, "GET", "api/conventions")).conventions,
+  setConventions: (s: Settings, row: Pick<ConventionRow, "scope" | "targetId" | "values">) => call(s, "PUT", "api/conventions", row),
   suggestions: async (s: Settings, days = 90) =>
     (await call<{ suggestions: Suggestion[] }>(s, "GET", `api/rules/suggestions${query({ days })}`)).suggestions,
 };

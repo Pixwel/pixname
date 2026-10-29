@@ -34,6 +34,8 @@ Route handlers live in `app/api/*/route.ts`; the logic is in `lib/` (Pixwel auth
 | `GET /api/expected` | `{ assets: [{ projectId, slug, name, type, addedBy, at }] }`: expected assets (pasted from delivery docs, not in Pixwel yet) of projects you can see |
 | `POST /api/expected` | `{ projectId, type, names }` → `{ added }`: add a pasted list |
 | `DELETE /api/expected?projectId=…&slug=…` | Forget one expected asset, or the project's whole list without `slug` |
+| `GET /api/conventions` | `{ conventions: [{ scope, targetId, values, updatedBy, at }] }`: house styles per studio or project (`values.zipCollect`: zips are `…_COLLECT.zip`) |
+| `PUT /api/conventions` | `{ scope: "studio"\|"project", targetId, values }`: admins set one (`values: {}` clears it) |
 
 ## Deploying (once)
 

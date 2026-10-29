@@ -5,6 +5,10 @@ import type { Asset, Catalog, DownloadTags, Project, QueueItem, WorkRequest } fr
 import { DEFAULT_TEXT_TAGS, parseFilename } from "./parse";
 import { assetTitleToken, contextHints, dirsOf } from "./fuzzy";
 import { tagsFromFfprobe, tagsFromMediainfo } from "./media";
+import type { Conventions } from "./conventions";
+
+/** Used when nothing about a file names its language. */
+export const DEFAULT_LANGUAGE = "ENG";
 
 export interface Proposal {
   name?: string;
@@ -24,6 +28,8 @@ export interface ProposeContext {
   project?: Project;
   asset?: Asset;
   workRequest?: WorkRequest;
+  /** House style for the project (lib/conventions). */
+  conventions?: Conventions;
 }
 
 /** npm `slugify` defaults, as the UI uses to build work request tag tokens. */
@@ -125,6 +131,19 @@ export function propose(item: QueueItem, ctx: ProposeContext): Proposal {
     }
   }
 
+  // A US asset type is for the US: "tv-spot.us" spots are ENG-US unless something says otherwise.
+  if (asset?.type.endsWith(".us") && (!country || country === "WW")) country = "US";
+
+  // Collects (a studio convention): the archive gets COLLECT instead of text and codec tokens.
+  const ext = (item.ext || "").toLowerCase();
+  const collect = ext === "zip" && !!ctx.conventions?.zipCollect;
+  if (collect) {
+    tags.Text = null;
+    tags.SubDub = { sub: null, dub: null };
+    tags.Codec = null;
+    tags.Extra = ["COLLECT"];
+  }
+
   // 5. Explicit user edits.
   if (o.language !== undefined) language = o.language || undefined;
   if (o.country !== undefined) country = o.country || undefined;
@@ -139,10 +158,13 @@ export function propose(item: QueueItem, ctx: ProposeContext): Proposal {
   if (!project) return result({ error: "Choose a project", language, country, version });
   if (!project.filePrefix) return result({ error: `Project "${project.name}" has no file prefix`, language, country, version });
   if (!asset) return result({ error: "Choose an asset", language, country, version });
-  if (!language) return result({ error: "Choose a language", language, country, version });
+  if (!language) {
+    language = DEFAULT_LANGUAGE;
+    notes.push(`Language assumed ${DEFAULT_LANGUAGE}: nothing in the name or folders says otherwise`);
+  }
 
   // Default text tag by asset type category (parse.js defaultTextTag).
-  if (!tags.Text && !tags.SubDub.sub && !tags.SubDub.dub) {
+  if (!collect && !tags.Text && !tags.SubDub.sub && !tags.SubDub.dub) {
     const category = catalog.types.find((t) => t.name === asset.type)?.category ?? "av";
     const fallback = DEFAULT_TEXT_TAGS[category]?.[0];
     if (fallback) tags.Text = fallback;
@@ -161,7 +183,6 @@ export function propose(item: QueueItem, ctx: ProposeContext): Proposal {
     }
   }
 
-  const ext = (item.ext || "").toLowerCase();
   try {
     const ingest = new Ingest({
       asset: {

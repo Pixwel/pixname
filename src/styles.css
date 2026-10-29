@@ -467,3 +467,13 @@ label.check { display: inline-flex; align-items: center; gap: 6px; cursor: point
 .type-option .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .type-option .token { color: var(--faint); font-size: 11px; flex-shrink: 0; }
 .type-empty { padding: 8px; }
+
+/* Studio filter and naming conventions */
+.studio-filter { margin-top: 8px; }
+.dialog .convention { display: grid; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.dialog .convention:last-of-type { border-bottom: 0; }
+.dialog .form .bad { color: var(--error); font-size: 12px; }
+.codes .add-code { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.codes .add-code > .field.mono { width: 96px; height: 28px; border-radius: var(--radius-sm); }
+.codes > .hint { margin-top: 6px; }
+.codes .bad { color: var(--error); }

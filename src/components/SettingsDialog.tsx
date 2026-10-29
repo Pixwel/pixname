@@ -28,6 +28,8 @@ export function SettingsDialog() {
   const forgetAliases = useStore((s) => s.forgetAliases);
   const setAlias = useStore((s) => s.setAlias);
   const [editingCode, setEditingCode] = useState<string | null>(null);
+  const [newCode, setNewCode] = useState({ code: "", projectId: "" });
+  const [codeError, setCodeError] = useState<string | null>(null);
   const projects = useStore((s) => s.projects);
   const projectName = (id: string) =>
     projects.status === "ready" ? projects.data.find((p) => p._id === id)?.name ?? "unknown project" : id;
@@ -36,6 +38,19 @@ export function SettingsDialog() {
   const serviceState = useStore((s) => s.service);
   const sharedCodes = useStore((s) => s.sharedCodes);
   const shared = serviceState.status === "ready";
+  // Team codes are changed by admins; without the service, codes are this machine's own.
+  const canAddCodes = !shared || !!serviceState.health.user?.isAdmin;
+  const newCodeValid = /^[A-Z0-9]{2,6}$/.test(newCode.code) && !/^\d+$/.test(newCode.code) && !!newCode.projectId;
+
+  async function addCode() {
+    setCodeError(null);
+    try {
+      await setAlias(newCode.code, newCode.projectId);
+      setNewCode({ code: "", projectId: "" });
+    } catch (e) {
+      setCodeError(e instanceof Error ? e.message : String(e));
+    }
+  }
   // With the service connected, the list is the team's; otherwise this machine's.
   const codeRows: { code: string; projectId: string; detail?: string }[] = shared
     ? Object.entries(sharedCodes)
@@ -138,7 +153,7 @@ export function SettingsDialog() {
               </span>
             </span>
           </label>
-          {codeRows.length > 0 && (
+          {(codeRows.length > 0 || canAddCodes) && (
             <div className="codes">
               <div className="codes-head">
                 <span>{shared ? "Team vendor codes" : "Remembered vendor codes"}</span>
@@ -195,6 +210,38 @@ export function SettingsDialog() {
                   </li>
                 ))}
               </ul>
+              {canAddCodes && (
+                <div className="add-code">
+                  <input
+                    className="field mono"
+                    placeholder="FFSS26"
+                    aria-label="Code"
+                    spellCheck={false}
+                    maxLength={6}
+                    value={newCode.code}
+                    onChange={(e) => setNewCode((c) => ({ ...c, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") }))}
+                  />
+                  <span className="arrow">→</span>
+                  <select
+                    className="field project-select"
+                    aria-label="Project"
+                    value={newCode.projectId}
+                    onChange={(e) => setNewCode((c) => ({ ...c, projectId: e.target.value }))}
+                  >
+                    <option value="">Choose a project…</option>
+                    {projectOptions.map((p) => (
+                      <option key={p._id} value={p._id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button type="button" className="btn small" disabled={!newCodeValid} onClick={addCode}>
+                    Add code
+                  </button>
+                </div>
+              )}
+              <div className="hint">
+                Files whose names start with a code go to its project, e.g. FFSS26 covers FFSS26_5083_… and FFSS261574XH.
+                {codeError && <span className="bad"> {codeError}</span>}
+              </div>
             </div>
           )}
           <details className="advanced" open={advancedOpen}>

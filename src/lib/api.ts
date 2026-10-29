@@ -6,6 +6,7 @@ import type {
   Catalog,
   Language,
   Project,
+  Studio,
   Tag,
   Territory,
   WorkRequest,
@@ -72,6 +73,10 @@ export async function loadCatalog(settings: Settings): Promise<{ catalog: Catalo
 
 export const fetchProjects = async (settings: Settings) =>
   (await apiGet<Project[]>(settings, "projects")).filter((p) => !p.archived);
+
+/** Studio names by id; projects only carry the id. */
+export const fetchStudios = async (settings: Settings): Promise<Record<string, string>> =>
+  Object.fromEntries((await apiGet<Studio[]>(settings, "studios")).map((s) => [s._id, s.name]));
 
 export const fetchAssets = (settings: Settings, projectId: string) =>
   apiGet<Asset[]>(settings, "assets", { project: projectId });

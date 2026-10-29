@@ -50,6 +50,40 @@ function bestAlignment(letters: string, words: string[]): { score: number; start
   return found ? { score: found.total / letters.length, starts: found.starts } : { score: 0, starts: 0 };
 }
 
+/**
+ * The remembered code a file name starts with: its vendor code, or else the longest known code
+ * that begins its first chunk, so "FFSS26" also covers "FFSS261574XH.mov".
+ */
+export function knownCode(fileName: string, known: Iterable<string>): string | undefined {
+  const codes = new Set(known);
+  const code = vendorCode(fileName);
+  if (code && codes.has(code)) return code;
+  const first = fileName.split(/[_\s.]/)[0] ?? "";
+  return [...codes].filter((c) => c.length >= 3 && first.startsWith(c)).sort((a, b) => b.length - a.length)[0];
+}
+
+const STUDIO_STOP = new Set(["the", "studio", "studios", "pictures", "films", "entertainment", "inc", "llc"]);
+
+/** "Focus Features" -> "FF". One-word studios ("Paramount") have no usable initials. */
+export function studioInitials(name: string): string | undefined {
+  const words = tokenize(name).filter((w) => !STUDIO_STOP.has(w) && !/^\d+$/.test(w));
+  return words.length >= 2 ? words.map((w) => w[0]).join("").toUpperCase() : undefined;
+}
+
+/**
+ * How well a studio-style code fits a project: studio initials, title initials and a two-digit
+ * year, e.g. "FFSS26" = Focus Features' Sense and Sensibility (2026). The code may run on into a
+ * spot number ("FFSS261574XH"). 0 when the name doesn't start with the project's studio initials.
+ */
+export function studioCodeScore(fileName: string, project: Project, studioName: string | undefined): number {
+  const initials = studioName && studioInitials(studioName);
+  if (!initials) return 0;
+  const m = (fileName.split(/[_\s.]/)[0] ?? "").match(/^([A-Z]{4,12})\d{2}/);
+  if (!m || !m[1].startsWith(initials)) return 0;
+  const title = m[1].slice(initials.length);
+  return title.length >= 2 ? abbrevScore(title, project) : 0;
+}
+
 /** How well a vendor code abbreviates a project's name or file prefix, 0..1. */
 export function abbrevScore(code: string, project: Project): number {
   const letters = code.toLowerCase().replace(/[0-9]/g, "");
